@@ -1,7 +1,9 @@
 # 加载器接入约定
 
-加载器开发已迁移到真正的上游 fork：[RovingAimer/sora1looseload](https://github.com/RovingAimer/sora1looseload)。本仓库只维护独立 Mod 核心，不再附带另一份加载器开发源码或构建脚本。完整来源和当前接入提交记录在 [loader.lock.json](../loader.lock.json)。
+配套加载器在 [RovingAimer/sora1looseload](https://github.com/RovingAimer/sora1looseload) 维护，当前安装发布为 [v0.1.0](https://github.com/RovingAimer/sora1looseload/releases/tag/v0.1.0)。源版本和模块路径记录于 [loader.lock.json](../loader.lock.json)。
 
-当前约定是固定加载游戏程序目录下的 `mods/DialogueOutline/DialogueOutline.dll`，在 DllMain/loader lock 之外显式调用 `DWORD WINAPI SoraDialogueInitialize()`，通过返回状态的 `0x008` 判断本核心是否安装 hook；`0x800` 需作为内存维护警告处理。缺少模块时保留原资源加载行为。
+加载器在后台资源初始化的 Detours 事务提交成功后，加载游戏程序目录下的 `mods/DialogueOutline/DialogueOutline.dll`，并在 loader lock 外显式调用 `DWORD WINAPI SoraDialogueInitialize()`。核心缺失时继续原有 loose 资源加载流程。
 
-这是针对描边模块的接入点，不是通用插件框架。现用原版加载器没有此接入点：选择该路线需要明确更换为支持它的加载器版本；fork 的源码、编译和发布独立维护。ASI 是另一条可选路线，与该接入点择一使用。
+初始化返回值的 `0x008` 表示此核心已安装 hook，`0x020` 表示目标地址冲突，`0x800` 表示内存最终处理警告。核心用 InitOnce 缓存初始化结果。加载器将返回状态写入 `console.log`；正常初始化值为 `0x14F`。
+
+核心也提供 `InitializeASI` 导出供支持该锁外入口的 ASI 加载器调用；构建方式为 `python build.py --asi`。当前发布安装包使用配套 xinput 加载器入口。构建 ASI 时选择单一入口进行初始化。

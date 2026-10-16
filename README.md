@@ -1,37 +1,31 @@
 # sora1dialogueoutline
 
-《空之轨迹 the 1st》透明对白背景与文字描边 Mod。它保留对白原色，并把原有阴影副层改为贴近字形的黑白描边。主对白和可选即时对话气泡使用专属布局标记；菜单和日志没有这些标记。
+《空之轨迹 the 1st》对白透明背景与自适应文字描边 Mod。保留文字原色，以黑色或白色描边提高可读性，并移除对白文字的偏移阴影。
 
-## 方案与当前效果
+## 下载与安装
 
-资源补丁为对白节点写入精确标记值 `0.28125f`（位模式 `0x3E900000`），并提供透明背景 DDS。原生 CPU hook 在构建字形副层时检查标记，将对白阴影副层转为原生描边几何。这个位置能跟随实际字形与颜色工作，也减少对其他 Mod 资源的改动。
+当前发布为 [v0.1.0](https://github.com/RovingAimer/sora1dialogueoutline/releases/tag/v0.1.0)。
 
-描边颜色在每个字形项创建时，根据填充文字 RGB 与节点 RGB 的调制结果自动选择纯黑或纯白，保留填充 RGB 与 alpha。之后颜色变化若没有重建字形项，不会重新选色。
+| 下载 | 用途 |
+| --- | --- |
+| [配套加载器 v0.1.0](https://github.com/RovingAimer/sora1looseload/releases/tag/v0.1.0) | 加载对白核心，安装文件为 `xinput1_4.dll`。 |
+| [主包](https://github.com/RovingAimer/sora1dialogueoutline/releases/download/v0.1.0/DialogueOutline-v0.1.0-main.zip) | 必装：主对白正文、姓名描边及透明背景。 |
+| [即时对白横条包](https://github.com/RovingAimer/sora1dialogueoutline/releases/download/v0.1.0/DialogueOutline-v0.1.0-active-voice.zip) | 可选：带头像的即时对白横条，背景透明、文字描边；与主包一起使用。 |
 
-用户已确认主对白和即时气泡正常，偏移阴影消失。默认线宽系数为 `0.60`，调整方法见 [BUILDING.md](BUILDING.md)。对白节点通过专属布局标记识别。
+退出游戏并备份将被覆盖的文件，先安装配套加载器，再将主包解压合并到 `sora_1st.exe` 所在目录；需要即时对白横条效果时，再合并可选包。保留 ZIP 内的目录结构。
 
-核心只接受 `sora_1st.exe`，SHA256：
+仅支持 [INSTALL.md](INSTALL.md) 列出的游戏 EXE 版本。该文档包含完整文件清单、版本核对和卸载恢复步骤。人物头顶跟随角色移动的气泡暂未纳入此发布。
 
-```text
-9585d3d993874d65156aba633c00b8a25faab3afde8953a8a183c80fb8f657ac
-```
+## 方案与当前实现
 
-## 安装包
+布局补丁为主对白正文、姓名及可选即时对白横条的文字节点写入专属标记；DDS 提供对应背景的透明贴图。核心在游戏构建字形副层时检查标记，将偏移阴影项转换为原生描边几何。这一接入点能使用实际字形和有效文字色，并将描边范围限定到带标记的对白节点。
 
-主包合并到游戏目录后包含：
+核心保留填充文字的 RGB 与 alpha，在每个字形项创建时按文字色选择对比度更高的纯黑或纯白描边。选色使用填充 RGB 与节点 RGB 的乘积；后续颜色变化在字形项重建时重新计算。默认线宽系数为 `0.60`。
 
-```text
-mods/DialogueOutline/DialogueOutline.dll
-layout/subtitle.lay
-asset/dx11/image/window8.dds
-```
+粗细、固定颜色、自定义 RGB 和自适应算法的调整方式见 [BUILDING.md](BUILDING.md)。当前资源覆盖与显示行为见 [VISUAL_FIX.md](VISUAL_FIX.md)，加载器接入约定见 [integration/README.md](integration/README.md)。
 
-即时对话气泡是可选包，提供 `layout/active_voice.lay` 和 `asset/dx11/image/active_voice.dds`。核心由兼容加载器从固定路径加载。配套 `xinput1_4.dll` 加载器单独提供，安装、卸载步骤见 [INSTALL.md](INSTALL.md)。
+## 源码与授权
 
-发布 ZIP 只放安装所需文件。完整源码、构建步骤和授权说明见公开仓库：[sora1dialogueoutline](https://github.com/RovingAimer/sora1dialogueoutline) 与独立加载器 fork [sora1looseload](https://github.com/RovingAimer/sora1looseload)。
+核心源码在本仓库，配套加载器源码在 [sora1looseload](https://github.com/RovingAimer/sora1looseload)。构建步骤和资源输入说明见 [BUILDING.md](BUILDING.md)。安装 ZIP 仅包含安装文件，GitHub 下载区的 `Source code` 为源码归档。
 
-## 开发与授权
-
-从 Windows x64 源码构建见 [BUILDING.md](BUILDING.md)。当前视觉状态和线宽见 [VISUAL_FIX.md](VISUAL_FIX.md)。核心、加载器、Detours、DDS 与游戏资源的来源和许可各自列于 [THIRD_PARTY.md](THIRD_PARTY.md)。
-
-核心与构建代码采用 MIT，见 [LICENSE](LICENSE)。DLL包含完整MIT许可通知。DDS与游戏资源的来源和授权见[THIRD_PARTY.md](THIRD_PARTY.md)。
+核心与构建代码采用 [MIT](LICENSE)，完整许可通知嵌入 DLL。加载器、依赖、DDS 与游戏资源的来源和许可见 [THIRD_PARTY.md](THIRD_PARTY.md)。

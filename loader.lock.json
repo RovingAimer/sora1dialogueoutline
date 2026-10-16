@@ -8,5 +8,5 @@
   "generic_plugin_framework": false,
   "offline_candidate_loader_sha256": "bffe52ead5a04f42978ec6b63feafe729d812974c11493b3cd5cada38910c486",
   "game_runtime_verified": true,
-  "validation_scope": "Fixed loader and enabled dialogue core reached the title and game scene locally. Main dialogue outline, shadow removal and optional active voice were confirmed by the user. Final thickness multiplier is 0.60."
+  "validation_scope": "Startup and scene runtime check; main dialogue and active voice banner rendering."
 }

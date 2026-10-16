@@ -2,10 +2,10 @@
 
 ## 环境和源码
 
-核心需要 Windows x64、Python 3.10+、Visual Studio 2022 C++ Build Tools（MSVC x64、MASM）和 Windows SDK。完整源码位于 [sora1dialogueoutline](https://github.com/RovingAimer/sora1dialogueoutline)。
+核心需要 Windows x64、Python 3.10+、Visual Studio 2022 C++ Build Tools（MSVC x64、MASM）和 Windows SDK。当前发布为 [v0.1.0](https://github.com/RovingAimer/sora1dialogueoutline/releases/tag/v0.1.0)，完整源码位于 [sora1dialogueoutline](https://github.com/RovingAimer/sora1dialogueoutline)。
 
 ```powershell
-git clone https://github.com/RovingAimer/sora1dialogueoutline.git
+git clone --branch v0.1.0 https://github.com/RovingAimer/sora1dialogueoutline.git
 cd sora1dialogueoutline
 python build.py
 ```
@@ -18,17 +18,17 @@ python build.py
 python tools/build_resources.py
 ```
 
-脚本按 `resource_patches.json` 核对输入 SHA256 和每项修改，再写入 `build/resources/`。主包文件位于 `build/resources/main/`；即时气泡文件位于 `build/resources/optional_active_voice/`。
+脚本按 `resource_patches.json` 核对输入 SHA256 和每项修改，再写入 `build/resources/`。主包文件位于 `build/resources/main/`；即时对白横条文件位于 `build/resources/optional_active_voice/`。
 
 兼容加载器单独维护和构建。递归克隆会取得其固定 Detours 子模块：
 
 ```powershell
-git clone --recursive https://github.com/RovingAimer/sora1looseload.git
+git clone --recursive --branch v0.1.0 https://github.com/RovingAimer/sora1looseload.git
 cd sora1looseload
 python build.py
 ```
 
-加载器输出 `build/xinput1_4.dll` 和 `build/report.json`。它使用 Microsoft Detours，固定在提交 `9764cebcb1a75940e68fa83d6730ffaf0f669401`，并保留 Detours 自己的 MIT 版权与许可。独立描边核心不使用 Detours。加载器原始上游为 [Hinkiii/sora1looseload](https://github.com/Hinkiii/sora1looseload)，集成源码、构建及许可见 [RovingAimer fork](https://github.com/RovingAimer/sora1looseload)。
+加载器输出 `build/xinput1_4.dll` 和 `build/report.json`。它使用 Microsoft Detours，固定在提交 `9764cebcb1a75940e68fa83d6730ffaf0f669401`，并保留 Detours 自己的 MIT 版权与许可。加载器原始上游为 [Hinkiii/sora1looseload](https://github.com/Hinkiii/sora1looseload)，集成源码、构建及许可见 [RovingAimer fork](https://github.com/RovingAimer/sora1looseload)。
 
 ## 当前 hook
 
@@ -57,7 +57,7 @@ python build.py
 constexpr float kOutlineWidthMultiplier = 0.60f;
 ```
 
-默认值为 `0.60f`。减小数值可变细，增大数值可加粗；例如 `0.50f` 较细，`0.70f` 较粗。该倍率同时作用于带标记的正文、姓名和即时气泡。布局的 `0.28125f` 标记保持原值。
+默认值为 `0.60f`。减小数值可变细，增大数值可加粗；例如 `0.50f` 较细，`0.70f` 较粗。该倍率同时作用于带标记的正文、姓名和即时对白横条。布局的 `0.28125f` 标记保持原值。
 
 修改后运行 `python build.py`，退出游戏，再替换 `mods/DialogueOutline/DialogueOutline.dll`。资源文件和加载器保持原样。
 

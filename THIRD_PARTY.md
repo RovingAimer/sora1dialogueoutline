@@ -8,7 +8,7 @@
 
 加载器 fork 基于 [Hinkiii/sora1looseload](https://github.com/Hinkiii/sora1looseload) 的提交 `04e898e369e3019d5aa2cb13a7209de39c643a4a`，保留上游历史、MIT 协议和 Hinkiii 2025 年版权声明。集成和构建改动也采用 MIT，Copyright (c) 2026 DialogueOutline contributors。
 
-Microsoft Detours 是独立加载器的依赖，固定在提交 `9764cebcb1a75940e68fa83d6730ffaf0f669401`。其 Microsoft MIT 许可证和版权随加载器源码及源码包保留。描边核心不依赖 Detours。
+Microsoft Detours 是独立加载器的依赖，固定在提交 `9764cebcb1a75940e68fa83d6730ffaf0f669401`。其 Microsoft MIT 许可证和版权随加载器源码保留。
 
 ## DDS 与游戏资源
 
