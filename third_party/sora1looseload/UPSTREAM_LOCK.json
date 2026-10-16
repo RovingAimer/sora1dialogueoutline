@@ -1,0 +1,170 @@
+{
+  "repository": "https://github.com/Hinkiii/sora1looseload",
+  "commit": "04e898e369e3019d5aa2cb13a7209de39c643a4a",
+  "license": "MIT",
+  "commit_date": "2025-10-11T03:53:01Z",
+  "retrieved": "2026-10-16",
+  "detours": {
+    "repository": "https://github.com/microsoft/Detours",
+    "commit": "9764cebcb1a75940e68fa83d6730ffaf0f669401",
+    "license": "MIT",
+    "vendored_scope": "Complete src directory, licenses, credits, README and makefiles. Samples/tests/CI are omitted; no upstream binaries."
+  },
+  "files": {
+    ".gitignore": {
+      "sha256": "3407cefc2a9d64f884ff3122a5ade50c10d001d10f608062c20ff92b225ae436",
+      "git_blob_sha1": "ce892922f7b0c014817dca8eb95a3b444d0bd27c",
+      "bytes": 7370
+    },
+    ".gitmodules": {
+      "sha256": "7b72f12bbe159588b2f390ff5b153ee9575ab29fdc4fbd0bd398ab1a344dc969",
+      "git_blob_sha1": "4cfac644ff39d12b14b83ea195f6dc6aade95c91",
+      "bytes": 100
+    },
+    "LICENSE": {
+      "sha256": "c0a814628df9a6883bb9e7f5ce8be1928e846f2d164ae7162b345056cc459ceb",
+      "git_blob_sha1": "fb7d7694daee3a4806b1ef3b06de34d5e1fe71fe",
+      "bytes": 1064
+    },
+    "README.md": {
+      "sha256": "2b7446ce9181d8f390eaba816fb13fc939063f24afb7421d9fb6c3226a0552ec",
+      "git_blob_sha1": "bf75fe2a41b45997f43b2275c9e0da33956f7bf7",
+      "bytes": 685
+    },
+    "dllmain.cpp": {
+      "sha256": "eb7df2b6356913ca56ad394ec21c70d8b61a5a65530b0086a434a527b5a0f76b",
+      "git_blob_sha1": "b8356070d9156bdd5661c3b861b4252201f0d7ae",
+      "bytes": 11657
+    },
+    "framework.h": {
+      "sha256": "d7e3273aca06ee9a2b47ec7f96fbf06fd9301849ebf26ba54a441f8fcde36bd6",
+      "git_blob_sha1": "54b83e94fd330dce07fdad560a0101140e0989a3",
+      "bytes": 149
+    },
+    "pch.h": {
+      "sha256": "ae8edb9ed44e84db3a64ff02bb4e053d661dc19474d8e284bda1c4d625744a0b",
+      "git_blob_sha1": "885d5d62e48eed596a0c367a75461043c638dca3",
+      "bytes": 563
+    },
+    "proxy.cpp": {
+      "sha256": "93a0102eb19c283135b2bb59dad1764a6f62765156dee6835e4d2656961a40a1",
+      "git_blob_sha1": "59b2f657295795c6e02413e54790719842e834cd",
+      "bytes": 4894
+    },
+    "sora1looseload.sln": {
+      "sha256": "c6496a046219d1b554ea1f06823cf19f733f0c92489f0dd3625fbd7e7e2d00e9",
+      "git_blob_sha1": "2dabc7aec748a3b7e3dd2a3beee4dbf89e4ff3cf",
+      "bytes": 1420
+    },
+    "sora1looseload.vcxproj": {
+      "sha256": "10093d3b4cc7eb602fcc685b5a84650c2d51488535f5d7304fa7d6bd412c96a7",
+      "git_blob_sha1": "c052d7cda341f1373f6a83704453d4bedaf1be89",
+      "bytes": 8628
+    },
+    "sora1looseload.vcxproj.filters": {
+      "sha256": "2515976e8126e52e2e2aac32d1758aee7d3996c553d14182a3f2279a3d811739",
+      "git_blob_sha1": "a1819f51e71833e3d8ef92a160c14bd5513d2527",
+      "bytes": 1253
+    },
+    "external/detours/CREDITS.md": {
+      "sha256": "f998e4cc8c40ec7d0d9bf4e476164935b18928cc2315b3c1f9d730ab3f692baa",
+      "git_blob_sha1": "7c7c8152831048ba0e95875c7445a7289f85333c",
+      "bytes": 4859
+    },
+    "external/detours/LICENSE": {
+      "sha256": "7c77a44a8acd9b41fdc209864a8016b3d430b5d0e09309818d5b7444336df744",
+      "git_blob_sha1": "b2f52a2bad4e27e2d9c68a755abb74cb8943f2fa",
+      "bytes": 1074
+    },
+    "external/detours/LICENSE.md": {
+      "sha256": "b301808b732cfaa60df2b4b422d78cd97d2a15058b207e7e33f0535ba5170dd6",
+      "git_blob_sha1": "e6a4c563056daedce20576a96a4d77b02a7dc8b6",
+      "bytes": 1099
+    },
+    "external/detours/Makefile": {
+      "sha256": "26e55b343fce15b54b8723e4caa77c44fe115f6d0e90cc6887d27f653ab42c3b",
+      "git_blob_sha1": "78ef9d04e81a403d9e644c2b847a9d0202421c1e",
+      "bytes": 2065
+    },
+    "external/detours/README.md": {
+      "sha256": "3dd37ea61584e1d1e17bbfdc6160d19beb35c6771c90d04be5024f6d703c9b7a",
+      "git_blob_sha1": "8fe4043ef7469a87fb39c57a32dd957ced9e8136",
+      "bytes": 3189
+    },
+    "external/detours/src/Makefile": {
+      "sha256": "4ae1200e0e3767bf3c6b60e8362ea99c10c5f25615716d06dce85715d7ca1688",
+      "git_blob_sha1": "413b30b0e88e146b727386356a0e7c00dba0c157",
+      "bytes": 3507
+    },
+    "external/detours/src/creatwth.cpp": {
+      "sha256": "57d1756707c93d4544d3346355d3c7fe900578a8ecb4b4f6835da55e71b02cd5",
+      "git_blob_sha1": "c2819aff86e0f119c2ce818be71960f9267373e9",
+      "bytes": 64560
+    },
+    "external/detours/src/detours.cpp": {
+      "sha256": "4a82da4b285ddae0e7c825cfeaa798241b393207cd3374b556be4877f71f906b",
+      "git_blob_sha1": "91d840d19443d52d1afd383c3766edf74a8cd910",
+      "bytes": 92828
+    },
+    "external/detours/src/detours.h": {
+      "sha256": "74b9d7a9f4f219a3ba1f08ee3f11ffece16f10ba413b12477955cca7449c4f60",
+      "git_blob_sha1": "8e98785497f24b34eb53edd4c7d1f7825dc328ca",
+      "bytes": 43270
+    },
+    "external/detours/src/detver.h": {
+      "sha256": "997d713d5b47d159f1736840b318ea426c76ed6f148014a5a9da78ebb4bd700c",
+      "git_blob_sha1": "3d4f54487e94c2922544fa2fc6eca62e2d202c55",
+      "bytes": 721
+    },
+    "external/detours/src/disasm.cpp": {
+      "sha256": "8b879e1232131cc79b956d5976b8261365f4bf1da95cb50586a2cdb93651edef",
+      "git_blob_sha1": "6a72d54d474db90044c316391b59ef5f9d955887",
+      "bytes": 165320
+    },
+    "external/detours/src/disolarm.cpp": {
+      "sha256": "20900e34f4afa968f4182fc9ae2d94d00ad15ddf1a17c53a034b18b38a9a4592",
+      "git_blob_sha1": "57e3a2c9f4993d80e5de8544118c10b8400b6a7b",
+      "bytes": 58
+    },
+    "external/detours/src/disolarm64.cpp": {
+      "sha256": "b93f39ba5691b9ffb98aae45c7fa5f5a6975a8fed001704ec97f7867a59998ce",
+      "git_blob_sha1": "f3a6aeb8c01617a070d894a3896803dd3bb90023",
+      "bytes": 60
+    },
+    "external/detours/src/disolia64.cpp": {
+      "sha256": "8ce93f70257c11a7b1015fac5ff801e7b72bbb9621f302a74f9d0bc1db49d334",
+      "git_blob_sha1": "9dd2410e836e8667a9e80efc048acf1e2bce21b9",
+      "bytes": 59
+    },
+    "external/detours/src/disolx64.cpp": {
+      "sha256": "dcac45e9bf07b916e454e141f850856b76e3e0f7b502bd5dd56e18aa2250e020",
+      "git_blob_sha1": "cd05a006f8b5c21d3b479cf50606f9f788f5c110",
+      "bytes": 58
+    },
+    "external/detours/src/disolx86.cpp": {
+      "sha256": "045d4b00029e810a9a156c1e17b33c2becdda1cc652a7cadfe61d9d1c66c81b6",
+      "git_blob_sha1": "91ff7d9a9fc006b710a9b729e69e67bf84aa1c7a",
+      "bytes": 58
+    },
+    "external/detours/src/image.cpp": {
+      "sha256": "a039466a8edc0248042c9df804a2d13bb8a4e03cb038fb10b4b762b2e5d214a9",
+      "git_blob_sha1": "897df4eb4e07660c7bef3208afc1ecd600cb0d82",
+      "bytes": 65529
+    },
+    "external/detours/src/modules.cpp": {
+      "sha256": "1950d936e27e847d69c132ee063752b5078593a98ab1841a2e10f33d8bbb4567",
+      "git_blob_sha1": "459de109f9a2ac079b2d987da0321c56a6d28cad",
+      "bytes": 32817
+    },
+    "external/detours/src/uimports.cpp": {
+      "sha256": "18f86c93d2c2d8feb46ddfb500027ce959a542b824c1d70cf7671227b8c70176",
+      "git_blob_sha1": "ed43d6594052da168b03b855bd8c387fb34f4375",
+      "bytes": 12665
+    },
+    "external/detours/system.mak": {
+      "sha256": "469b83d2ac623738232d579458dfa402cca07ee981f4e9935efee4eea8ccaf22",
+      "git_blob_sha1": "40404bc6c9c4712b10b9b810aff090205642e19e",
+      "bytes": 5236
+    }
+  }
+}

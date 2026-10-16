@@ -1,0 +1,89 @@
+{
+  "format_version": 1,
+  "code_license": "MIT; no game binaries included in the source distribution",
+  "marker_float32_bits": "0x3E900000",
+  "layouts": [
+    {
+      "input": "layout/subtitle.lay",
+      "output": "main/layout/subtitle.lay",
+      "source_sha256": "1fe04c8ace5ae7aa97f9c3c916a62e2bf9e00ce6127a923874cbba68c8725217",
+      "patched_sha256": "a724056fd122848fcb4b7fa134092b2f60587ae4309d63c53fdc5c35649711f1",
+      "changes": [
+        {
+          "offset": 3243,
+          "field": "/Layout/Root/children/1/outline_thickness",
+          "before": 0.0,
+          "after": 0.28125
+        },
+        {
+          "offset": 3113,
+          "field": "/Layout/Root/children/1/text_flag",
+          "before": 261.0,
+          "after": 389.0
+        },
+        {
+          "offset": 4237,
+          "field": "/Layout/Root/children/2/outline_thickness",
+          "before": 0.3,
+          "after": 0.28125
+        },
+        {
+          "offset": 5236,
+          "field": "/Layout/Root/children/3/outline_thickness",
+          "before": 0.2,
+          "after": 0.28125
+        }
+      ]
+    },
+    {
+      "input": "layout/active_voice.lay",
+      "output": "optional_active_voice/layout/active_voice.lay",
+      "source_sha256": "8201af6dbd12ba122f108d1569022b03bac5087e1430bf26ebc06a6ad73f6b0b",
+      "patched_sha256": "506f362b4c76b237f0b9b9a0185e2fdeaea16d7dc940e84169aa7425171f90d1",
+      "changes": [
+        {
+          "offset": 4211,
+          "field": "/Layout/Root/children/0/children/0/children/1/outline_thickness",
+          "before": 0.0,
+          "after": 0.28125
+        },
+        {
+          "offset": 4081,
+          "field": "/Layout/Root/children/0/children/0/children/1/text_flag",
+          "before": 257.0,
+          "after": 385.0
+        },
+        {
+          "offset": 4305,
+          "field": "/Layout/Root/children/0/children/0/children/1/shadow_color/r",
+          "before": 0.601424,
+          "after": 1.0
+        },
+        {
+          "offset": 4318,
+          "field": "/Layout/Root/children/0/children/0/children/1/shadow_color/g",
+          "before": 0.601417,
+          "after": 1.0
+        },
+        {
+          "offset": 4331,
+          "field": "/Layout/Root/children/0/children/0/children/1/shadow_color/b",
+          "before": 0.601417,
+          "after": 1.0
+        }
+      ]
+    }
+  ],
+  "reference_textures": [
+    {
+      "input": "reference/window8.dds",
+      "output": "main/asset/dx11/image/window8.dds",
+      "sha256": "c97b26a10149495d5a693e35b90e28344271c000705c05725cf6640f26c2181f"
+    },
+    {
+      "input": "reference/active_voice.dds",
+      "output": "optional_active_voice/asset/dx11/image/active_voice.dds",
+      "sha256": "ffc1721d272e7b71015a419d1ee969cb811e4614018789151cc670994e596cf1"
+    }
+  ]
+}
