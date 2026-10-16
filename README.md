@@ -1,4 +1,6 @@
-# DialogueOutline
+# sora1dialogueoutline
+
+《空之轨迹 the 1st》对话透明背景与自适应黑白描边工具。仓库名沿用 `sora1looseload` 的命名方式；独立核心模块名为 `DialogueOutline`。
 
 当前版本是《空之轨迹 the 1st》的**初版开发候选**，尚未实机验证，不是正式发布成品。安装前请阅读[安装说明](INSTALL.md)；构建信息见[BUILDING.md](BUILDING.md)，第三方来源与授权边界见[THIRD_PARTY.md](THIRD_PARTY.md)。
 
