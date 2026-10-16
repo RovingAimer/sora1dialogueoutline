@@ -12,7 +12,7 @@ Microsoft Detours 是独立加载器的依赖，固定在提交 `9764cebcb1a7594
 
 ## DDS 与游戏资源
 
-参考 `window8.dds` 与 `active_voice.dds` 来自用户下载的 [3DM 论坛参考贴](https://bbs.3dmgame.com/forum.php?mod=viewthread&tid=6654303)。对应 SHA256 为：
+参考 `window8.dds` 与 `active_voice.dds` 来自 [3DM 论坛参考贴](https://bbs.3dmgame.com/forum.php?mod=viewthread&tid=6654303)。对应 SHA256 为：
 
 - `window8.dds`: `c97b26a10149495d5a693e35b90e28344271c000705c05725cf6640f26c2181f`
 - `active_voice.dds`: `ffc1721d272e7b71015a419d1ee969cb811e4614018789151cc670994e596cf1`
