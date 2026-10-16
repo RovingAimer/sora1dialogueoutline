@@ -57,7 +57,7 @@ python build.py
 constexpr float kOutlineWidthMultiplier = 0.60f;
 ```
 
-`0.60f` 表示最初粗版的60%，`0.50f`为一半，`0.70f`会更粗。该倍率同时作用于带标记的正文、姓名和即时气泡。布局的 `0.28125f` 标记保持原值。
+默认值为 `0.60f`。减小数值可变细，增大数值可加粗；例如 `0.50f` 较细，`0.70f` 较粗。该倍率同时作用于带标记的正文、姓名和即时气泡。布局的 `0.28125f` 标记保持原值。
 
 修改后运行 `python build.py`，退出游戏，再替换 `mods/DialogueOutline/DialogueOutline.dll`。资源文件和加载器保持原样。
 

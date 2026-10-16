@@ -2,7 +2,7 @@
   "repository": "https://github.com/RovingAimer/sora1looseload",
   "upstream_repository": "https://github.com/Hinkiii/sora1looseload",
   "upstream_commit": "04e898e369e3019d5aa2cb13a7209de39c643a4a",
-  "integration_commit": "f0db429966bf0f07e4be7b75649c23fb26776182",
+  "integration_commit": "e8e74f154409f8bd29f0627c7341a8f22bb90a05",
   "module_path": "mods/DialogueOutline/DialogueOutline.dll",
   "initialize_export": "SoraDialogueInitialize",
   "generic_plugin_framework": false,

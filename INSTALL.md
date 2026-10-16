@@ -18,7 +18,7 @@
    - `asset/dx11/image/window8.dds`
 4. 需要即时对话气泡描边时，再合并可选包中的 `layout/active_voice.lay` 与 `asset/dx11/image/active_voice.dds`。
 
-检查加载器日志中的 `[DialogueOutline] status 0x14F`，确认核心已安装 hook。描边针对带标记的主对白正文、姓名和可选即时气泡。用户已确认这些对白正常显示且偏移阴影消失。
+检查加载器日志中的 `[DialogueOutline] Initialization status: 0x0000014F (hook active)`，确认核心已安装 hook。描边针对带标记的主对白正文、姓名和可选即时气泡。用户已确认这些对白正常显示且偏移阴影消失。
 
 ## 卸载
 
