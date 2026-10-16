@@ -164,7 +164,7 @@ def main():
         asi_path.write_bytes(dll)
     else:
         asi_path.unlink(missing_ok=True)
-    sources = [ROOT / 'build.py', ROOT / 'BUILDING.md', *sorted(SOURCE.rglob('*'))]
+    sources = [ROOT / 'build.py', ROOT / 'BUILDING.md', ROOT / 'LICENSE', *sorted(SOURCE.rglob('*'))]
     source_hashes = {path.relative_to(ROOT).as_posix(): digest(path.read_bytes())
                      for path in sources if path.is_file()}
     report = dict(artifact=dll_path.name, dll_sha256=digest(dll), dll_bytes=len(dll),

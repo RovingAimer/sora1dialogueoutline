@@ -1,7 +1,7 @@
 ; Copyright (c) 2026 DialogueOutline contributors
 ; SPDX-License-Identifier: MIT
 OPTION CASEMAP:NONE
-EXTERN SoraOutlineCallback:PROC
+EXTERN SoraOutlineCallbackWithScale:PROC
 EXTERN gSoraTrampoline:QWORD
 PUBLIC SoraHookBridge
 
@@ -28,7 +28,8 @@ SoraHookBridge PROC
     mov rcx, rsi
     mov rdx, rdi
     mov r8, rbx
-    call SoraOutlineCallback
+    movss xmm3, xmm8 ; Fourth Win64 argument: native glyph construction scale.
+    call SoraOutlineCallbackWithScale
     ldmxcsr dword ptr [rsp+80h]
     movdqu xmm0, xmmword ptr [rsp+20h]
     movdqu xmm1, xmmword ptr [rsp+30h]

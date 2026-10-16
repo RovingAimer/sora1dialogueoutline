@@ -2,10 +2,11 @@
   "repository": "https://github.com/RovingAimer/sora1looseload",
   "upstream_repository": "https://github.com/Hinkiii/sora1looseload",
   "upstream_commit": "04e898e369e3019d5aa2cb13a7209de39c643a4a",
-  "integration_commit": "328a07d3374650f76623336967657cd2b810989c",
+  "integration_commit": "f0db429966bf0f07e4be7b75649c23fb26776182",
   "module_path": "mods/DialogueOutline/DialogueOutline.dll",
   "initialize_export": "SoraDialogueInitialize",
   "generic_plugin_framework": false,
-  "offline_candidate_loader_sha256": "4f389af61ed053087125986f5712a5550e5b59ec04b4b34a376265f5f78a3325",
-  "game_runtime_verified": false
+  "offline_candidate_loader_sha256": "bffe52ead5a04f42978ec6b63feafe729d812974c11493b3cd5cada38910c486",
+  "game_runtime_verified": true,
+  "validation_scope": "Fixed loader and enabled dialogue core reached the title and game scene locally. Main dialogue outline, shadow removal and optional active voice were confirmed by the user. Final thickness multiplier is 0.60."
 }

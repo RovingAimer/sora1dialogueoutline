@@ -3,6 +3,7 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include "DialogueOutline.h"
+#include "LicenseNotice.h"
 #include <bcrypt.h>
 #include <cmath>
 #include <cstdint>
@@ -13,6 +14,7 @@
 namespace {
 constexpr std::uintptr_t kHookRva = 0x46BDF9;
 constexpr std::uint32_t kMarker = 0x3E900000; // Explicit resource marker: 0.28125f.
+constexpr float kOutlineWidthMultiplier = 0.60f;
 constexpr unsigned char kOriginal8[] = {0x00, 0xFF, 0x86, 0x88, 0x03, 0x00, 0x00, 0x48};
 constexpr unsigned char kExeHash[] = {
     0x95,0x85,0xd3,0xd9,0x93,0x87,0x4d,0x65,0x15,0x6a,0xba,0x63,0x3c,0x00,0xb8,0xa2,
@@ -116,6 +118,30 @@ void SoraOutlineCallback(const unsigned char* node, const unsigned char* fill,
         item[1] * modulation[1], item[2] * modulation[2]));
     const float rgb[] = {selected, selected, selected};
     std::memcpy(outline + 0x98, rgb, sizeof(rgb));
+}
+
+void SoraOutlineCallbackWithScale(const unsigned char* node, const unsigned char* fill,
+                                  unsigned char* outline, float glyphScale) noexcept {
+    std::uint32_t marker = 0;
+    std::uint16_t mode = 0;
+    std::memcpy(&marker, node + 0x368, sizeof(marker));
+    std::memcpy(&mode, outline + 0xAC, sizeof(mode));
+    if (marker != kMarker || (mode != 0x0001 && mode != 0x0100)) return;
+    if (mode == 0x0001) {
+        // Dialogue scripts can clear the native outline flag; replace its shadow item.
+        std::memcpy(outline + 0x08, fill + 0x08, 0x40);
+        float thickness = 0;
+        std::memcpy(&thickness, node + 0x368, sizeof(thickness));
+        const float width = thickness / glyphScale; // Native construction uses live XMM8.
+        std::memcpy(outline + 0xB0, &width, sizeof(width));
+        mode = 0x0100;
+        std::memcpy(outline + 0xAC, &mode, sizeof(mode));
+    }
+    float width = 0;
+    std::memcpy(&width, outline + 0xB0, sizeof(width));
+    width *= kOutlineWidthMultiplier; // Apply once per native item construction, including existing outlines.
+    std::memcpy(outline + 0xB0, &width, sizeof(width));
+    SoraOutlineCallback(node, fill, outline);
 }
 }
 

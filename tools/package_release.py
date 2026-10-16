@@ -1,4 +1,4 @@
-"""Package the local initial candidate and its MIT source; never install it."""
+"""Package installation files separately from release evidence and MIT source."""
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -6,6 +6,7 @@ from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / 'build/packages'
+VERSION = '0.3.0'
 TARGET_HASH = '9585d3d993874d65156aba633c00b8a25faab3afde8953a8a183c80fb8f657ac'
 
 
@@ -15,7 +16,7 @@ def digest(data):
 
 def source_files():
     files = {}
-    for name in ('LICENSE', 'README.md', 'INSTALL.md', 'BUILDING.md', 'THIRD_PARTY.md',
+    for name in ('LICENSE', 'README.md', 'INSTALL.md', 'BUILDING.md', 'THIRD_PARTY.md', 'VISUAL_FIX.md',
                  '.gitignore', '.gitattributes', 'build.py', 'resource_patches.json', 'loader.lock.json'):
         files[name] = (ROOT / name).read_bytes()
     for folder in ('src', 'tools', 'integration', '.github'):
@@ -62,15 +63,12 @@ def main():
     sources = source_files()
     source_id = digest(''.join(f'{name}\0{digest(data)}\n' for name, data in sorted(sources.items())).encode('utf-8'))
     core_report = json.loads((ROOT / 'build/core_report.json').read_text(encoding='utf-8'))
-    core_inputs = {name: ROOT / name for name in ('build.py', 'BUILDING.md')}
-    core_inputs.update({path.relative_to(ROOT).as_posix(): path for path in (ROOT / 'src').iterdir() if path.is_file()})
+    core_inputs = {name: ROOT / name for name in ('build.py', 'BUILDING.md', 'LICENSE')}
+    core_inputs.update({path.relative_to(ROOT).as_posix(): path for path in (ROOT / 'src').rglob('*') if path.is_file()})
     verify_native_report(ROOT / 'build/core_report.json', ROOT / 'build/DialogueOutline.dll',
                          core_report['sources'], core_inputs)
     dll = (ROOT / 'build/DialogueOutline.dll').read_bytes()
-    # Common docs and source identity travel with every native distribution.
-    common = {name: sources[name] for name in ('LICENSE', 'README.md', 'INSTALL.md', 'THIRD_PARTY.md')}
-    common['build_evidence/core_report.json'] = (ROOT / 'build/core_report.json').read_bytes()
-    metadata = dict(version='initial-development-candidate', source_tree_sha256=source_id,
+    metadata = dict(version=VERSION, source_tree_sha256=source_id,
                     code_license='MIT', target_exe_sha256=TARGET_HASH,
                     loader_repository='https://github.com/RovingAimer/sora1looseload',
                     game_runtime_verified=False, sky_2nd_supported=False,
@@ -78,9 +76,9 @@ def main():
                     runtime_selection='Per glyph item generation; highest black/white sRGB contrast',
                     original_loader_support='Stock sora1looseload has no plugin interface; integration is required',
                     core_sha256=digest(dll))
-    main_files = {**common, 'mods/DialogueOutline/DialogueOutline.dll': dll}
+    main_files = {'mods/DialogueOutline/DialogueOutline.dll': dll}
     resources = ROOT / 'build/resources'
-    optional_files = {**common}
+    optional_files = {}
     spec = json.loads((ROOT / 'resource_patches.json').read_text(encoding='utf-8'))
     for item in spec['layouts'] + spec['reference_textures']:
         relative = Path(item['output'])
@@ -89,25 +87,32 @@ def main():
             raise ValueError(f'Resource differs from reviewed specification: {relative}')
         target = main_files if relative.parts[0] == 'main' else optional_files
         target[Path(*relative.parts[1:]).as_posix()] = data
-    plans = [('1st_初版_主接入包.zip', main_files, 'original-loader-integration-required'),
-             ('1st_初版_可选即时对话.zip', optional_files, 'optional-active-voice-requires-main')]
+    if set(main_files) != {'mods/DialogueOutline/DialogueOutline.dll', 'layout/subtitle.lay',
+                           'asset/dx11/image/window8.dds'}:
+        raise ValueError('Main installation file set differs')
+    if set(optional_files) != {'layout/active_voice.lay', 'asset/dx11/image/active_voice.dds'}:
+        raise ValueError('Active-voice installation file set differs')
+    plans = [(f'DialogueOutline-v{VERSION}-main.zip', main_files, 'original-loader-integration-required'),
+             (f'DialogueOutline-v{VERSION}-active-voice.zip', optional_files, 'optional-active-voice-requires-main')]
     asi = ROOT / 'build/DialogueOutline.asi'
     if asi.exists():
         if asi.read_bytes() != dll:
             raise ValueError('Optional ASI must contain the same reviewed core')
-        asi_files = {**common, 'plugins/DialogueOutline.asi': dll}
+        asi_files = {'plugins/DialogueOutline.asi': dll}
         asi_files.update({name: data for name, data in main_files.items() if name.endswith(('.lay', '.dds'))})
-        plans.append(('1st_初版_可选ASI入口.zip', asi_files, 'optional-ual-initializeasi'))
+        plans.append((f'DialogueOutline-v{VERSION}-asi.zip', asi_files, 'optional-ual-initializeasi'))
     OUTPUT.mkdir(parents=True, exist_ok=True)
-    artifacts = [write_zip('DialogueOutline_初版_MIT源码.zip', sources)]
+    artifacts = [write_zip(f'DialogueOutline-v{VERSION}-source.zip', sources)]
     for name, files, route in plans:
-        manifest = {**metadata, 'route': route,
-                    'files': [dict(path=relative, bytes=len(data), sha256=digest(data)) for relative, data in sorted(files.items())]}
-        files['manifest.json'] = (json.dumps(manifest, indent=2, ensure_ascii=False) + '\n').encode('utf-8')
-        artifacts.append(write_zip(name, files))
+        artifact = write_zip(name, files)
+        artifact.update(route=route,
+                        files=[dict(path=relative, bytes=len(data), sha256=digest(data))
+                               for relative, data in sorted(files.items())])
+        artifacts.append(artifact)
     result = {**metadata, 'artifacts': artifacts,
               'native_build_report': 'build/core_report.json',
-              'native_build_report_sha256': digest(json.dumps(core_report, sort_keys=True).encode('utf-8'))}
+              'native_build_report_sha256': digest((ROOT / 'build/core_report.json').read_bytes()),
+              'native_build_report_data': core_report}
     (OUTPUT / 'release_manifest.json').write_text(json.dumps(result, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
     print(json.dumps(result, indent=2, ensure_ascii=False))
 

@@ -1,143 +1,80 @@
-# Standalone native core: offline build and integration
+# 构建与实现
 
-Copyright (c) 2026 DialogueOutline contributors. Code is MIT licensed; see
-`LICENSE`. This is an offline candidate, **not game-validated**.
+## 环境和源码
 
-## Build
-
-Requirements: Windows x64, Python 3.10+ (standard library only), Visual Studio
-2022 Build Tools or Visual Studio with **Desktop development with C++**, x64
-MSVC tools, MASM and a Windows SDK. The installed Visual Studio `vswhere.exe`
-locates the toolchain; `vcvars64.bat` supplies compiler and SDK paths.
-
-Copy this entire `source` directory into any ordinary writable workspace.
-From that copy, run:
+核心需要 Windows x64、Python 3.10+、Visual Studio 2022 C++ Build Tools（MSVC x64、MASM）和 Windows SDK。完整源码位于 [sora1dialogueoutline](https://github.com/RovingAimer/sora1dialogueoutline)。
 
 ```powershell
+git clone https://github.com/RovingAimer/sora1dialogueoutline.git
+cd sora1dialogueoutline
 python build.py
-# Optional alternative binary name for a compatible ASI loader:
-python build.py --asi
 ```
 
-All output is fixed to the adjacent `build/` directory. There is no install or
-arbitrary output-path option. The build reads no game executable, research
-copy, game DLL, original loader or game resources, and never loads the produced
-DLL or starts the game. Resource generation is a separate tool/workflow.
-Existing `build/resources/` is left intact.
+核心输出到 `build/DialogueOutline.dll`，构建报告为 `build/core_report.json`。构建使用当前源码、MSVC 和 Windows SDK，不需要游戏 EXE 或游戏运行时。
 
-The compiler uses `/MT /O2 /W4 /std:c++17 /EHsc /utf-8`; linking uses `/Brepro`,
-ASLR and NX. `/Brepro` removes the normal link timestamp; it does not by itself
-prove byte-for-byte reproduction across different compiler/SDK installations.
-`build/core_report.json` records source SHA256 values, compiler/version, SDK,
-flags, output SHA256, every export and every direct import. Build diagnostics,
-PE inspection, bridge disassembly, map, objects and import library stay in
-`build/`. Only Windows `KERNEL32.dll` and `bcrypt.dll` direct dependencies are
-allowed by the build check. There are no XInput/D3D exports or imports, no
-original-loader dependency, and no arbitrary third-party DLL loader in the core.
-Windows may load its own dependency/provider modules for these APIs.
+资源补丁需要四个工作副本：`inputs/layout/subtitle.lay`、`inputs/layout/active_voice.lay`、`inputs/reference/window8.dds`、`inputs/reference/active_voice.dds`。从自己的游戏和参考资源副本准备输入后运行：
 
-`DialogueOutline.dll` is the main product. `--asi` additionally creates
-`DialogueOutline.asi` with exactly the same bytes. Use one attachment method;
-do not install both copies. A default build removes a stale ASI product only.
+```powershell
+python tools/build_resources.py
+```
 
-## Primary attachment: original loader source integration
+脚本按 `resource_patches.json` 核对输入 SHA256 和每项修改，再写入 `build/resources/`。主包文件位于 `build/resources/main/`；即时气泡文件位于 `build/resources/optional_active_voice/`。
 
-The preferred route is an explicit call from the existing original loader's
-source integration. Its own outer worker/entry must already be **outside
-DllMain and the loader lock** before loading the core and calling:
+兼容加载器单独维护和构建。递归克隆会取得其固定 Detours 子模块：
+
+```powershell
+git clone --recursive https://github.com/RovingAimer/sora1looseload.git
+cd sora1looseload
+python build.py
+```
+
+加载器输出 `build/xinput1_4.dll` 和 `build/report.json`。它使用 Microsoft Detours，固定在提交 `9764cebcb1a75940e68fa83d6730ffaf0f669401`，并保留 Detours 自己的 MIT 版权与许可。独立描边核心不使用 Detours。加载器原始上游为 [Hinkiii/sora1looseload](https://github.com/Hinkiii/sora1looseload)，集成源码、构建及许可见 [RovingAimer fork](https://github.com/RovingAimer/sora1looseload)。
+
+## 当前 hook
+
+核心仅接受文件名 `sora_1st.exe` 和 SHA256 `9585d3d993874d65156aba633c00b8a25faab3afde8953a8a183c80fb8f657ac`。原始指令窗口位于 RVA `0x46BDF8`，hook 入口为 RVA `0x46BDF9`。调用现场的 fill、node、outline 分别在 RDI、RSI、RBX；原生字形尺度来自 XMM8，桥接后作为第四参数放入 XMM3。
+
+节点 `+0x368` 的 `0.28125f`（`0x3E900000`）是专属标记。hook 接受描边模式 `0x0001` 和 `0x0100`：
+
+- `0x0001` 项会把 fill 的字节 `0x08..0x47` 复制到 outline，改为模式 `0x0100`，并以标记值除以字形尺度生成线宽。
+- 两种模式都在本次原生字形项构建时将线宽乘以 `0.60`。模式 `0x0100` 使用原有线宽后应用同一倍率。
+- fill 的 RGB 与 alpha 保留；outline 的 RGB 写入自动选出的黑色或白色。
+
+选色以每个字形项的有效填充色为输入，计算过程如下：
+
+1. 每通道取 `itemRGB * nodeRGB` 并夹到 `0..1`。
+2. 按 sRGB 转线性值：`v <= 0.04045` 时为 `v / 12.92`；否则为 `((v + 0.055) / 1.055)^2.4`。
+3. 计算相对亮度 `Y = 0.2126R + 0.7152G + 0.0722B`。
+4. 黑色对比度为 `(Y + 0.05) / 0.05`；白色对比度为 `1.05 / (Y + 0.05)`。取较大者，相同时取黑色。返回值 `0` 表示黑，`1` 表示白。
+
+选色发生在字形项创建时。若后续颜色动画没有重建字形项，描边颜色不会重新计算。
+
+## 快速调整描边粗细
+
+修改 `src/core.cpp` 顶部的常量：
 
 ```cpp
-using Initialize = DWORD (WINAPI*)();
-// Resolve SoraDialogueInitialize from the explicitly loaded DialogueOutline.dll.
-// Call synchronously outside DllMain; retain and inspect the returned bitmask.
+constexpr float kOutlineWidthMultiplier = 0.60f;
 ```
 
-The companion loader integration uses the fixed path
-`mods/DialogueOutline/DialogueOutline.dll` relative to the loader/game directory.
-It owns that load; the core itself does not load the original loader or other
-third-party DLLs. The core is not a replacement `xinput1_4.dll`. This document
-does not authorize installation or execution in a game directory.
+`0.60f` 表示最初粗版的60%，`0.50f`为一半，`0.70f`会更粗。该倍率同时作用于带标记的正文、姓名和即时气泡。布局的 `0.28125f` 标记保持原值。
 
-`src/DialogueOutline.h` is the API/status contract. Exports:
+修改后运行 `python build.py`，退出游戏，再替换 `mods/DialogueOutline/DialogueOutline.dll`。资源文件和加载器保持原样。
 
-| Export | Contract |
-| --- | --- |
-| `DWORD WINAPI SoraDialogueInitialize()` | Explicit, synchronous, thread-safe `InitOnce` initialization; cached success or refusal per module. Call outside DllMain/loader lock. |
-| `DWORD WINAPI SoraGetStatus()` | Read current status; zero before explicit initialization. A concurrent observer may see intermediate bits until `InitializationFinished`. |
-| `DWORD WINAPI SoraChooseOutline(float r,float g,float b)` | Internal/offline inspection helper. Returns 0 black or 1 white. Does not initialize. |
-| `void SoraOutlineCallback(const unsigned char*,const unsigned char*,unsigned char*)` | Internal/offline inspection helper. Requires valid node (at least `0x36C` bytes), fill and outline buffers (at least `0xAE` bytes). No pointer validation or stable general-purpose public buffer ABI. |
-| `void WINAPI InitializeASI()` | Calls the same initializer synchronously; optional loader entry. |
+## 固定描边颜色
 
-`DllMain` only returns `TRUE`: no threads, host inspection, module loads, logs,
-or hooks. Loading into Python therefore starts no game logic. Explicit
-initialization in a host not named `sora_1st.exe` returns `0x500`
-(`ForeignHost | InitializationFinished`), without hashing, pinning or hooking.
-Calling the initializer under any DllMain/loader lock violates its contract;
-the core does not attempt to detect loader-lock ownership.
+`src/core.cpp` 的 `SoraOutlineCallback` 中，自动选择由下面这行完成：
 
-## Optional ASI attachment
+```cpp
+const float selected = static_cast<float>(SoraChooseOutline(item[0] * modulation[0],
+    item[1] * modulation[1], item[2] * modulation[2]));
+const float rgb[] = {selected, selected, selected};
+```
 
-Only a compatible loader that invokes the exported `InitializeASI` **outside
-DllMain**, such as current Ultimate ASI Loader with
-`DontLoadFromDllMain=1`, is supported. Legacy ASI loaders relying solely on
-plugin `DllMain` do not activate this module. ASI and replacement-DLL routes
-are optional alternatives; original-loader source integration remains primary.
-There is no XInput proxy/replacement binary in this source tree.
+固定纯白时，将完整的两行 `selected` 声明替换为 `const float selected = 1.0f;`；固定纯黑时替换为 `const float selected = 0.0f;`。自定义描边 RGB 时，删除完整的 `selected` 声明，并将数组行替换为例如：
 
-## Initialization and status
+```cpp
+const float rgb[] = {0.20f, 0.60f, 1.00f};
+```
 
-Initialization requires the host filename `sora_1st.exe`, SHA256
-`9585d3d993874d65156aba633c00b8a25faab3afde8953a8a183c80fb8f657ac`, and the exact
-original instruction window `00 FF 86 88 03 00 00 48` at RVA `0x46BDF8`.
-Only after host name/hash verification is the core pinned for process lifetime.
-A matching host with a failed install can also remain pinned; no unload API is
-provided. The executable hook starts at RVA `0x46BDF9` and is published by an
-aligned 8-byte compare-and-exchange after preparing the relay/trampoline.
-
-| Bit | Name | Meaning |
-| --- | --- | --- |
-| `0x001` | HostNameMatch | Expected host filename. |
-| `0x002` | HostHashMatch | Exact executable file SHA256. |
-| `0x004` | OriginalBytesMatch | Expected original instruction window observed. |
-| `0x008` | HookActive | **This module** successfully published its hook. |
-| `0x010` | HostHashRejected | Hash mismatch or hash/read failure. |
-| `0x020` | HookConflict | Original bytes differ or CAS publication lost to another patch. |
-| `0x040` | CorePinned | This module has been pinned for process lifetime. |
-| `0x080` | HookFailed | Hook was refused or could not be installed. |
-| `0x100` | InitializationFinished | Cached initialization result is complete. |
-| `0x200` | CorePinFailed | Could not pin callback/bridge code. |
-| `0x400` | ForeignHost | Wrong host name or unavailable host path; no hook attempted. |
-| `0x800` | MemoryFinalizeFailed | Protection/cache maintenance failed after patch attempt; inspect with other bits. |
-
-Normal successful installation is `0x14F`. `HookConflict` is not proof another
-DialogueOutline copy works: its owner is unknown. If both a DLL and ASI copy
-initialize, the second refuses the changed site and does **not** set
-`HookActive`. Same-module repeated calls return their original final result.
-Once published, relay/trampoline memory is retained even if later cache or
-protection maintenance fails. `HookActive | MemoryFinalizeFailed` needs review;
-it must not be presented as clean activation.
-
-## Behavior and current limits
-
-The original native CPU hook, field offsets and bridge have been retained.
-Only an exact resource marker `0.28125f` (`0x3E900000`) at node `+0x368` together
-with outline mode `0x0100` is eligible; screen position/color/size heuristics
-are not used. Marked resources must be supplied separately. The callback
-leaves fill RGB, fill alpha and outline alpha unchanged. At item construction,
-it multiplies fill RGB by node RGB and chooses whichever of black/white has
-higher sRGB relative-luminance contrast. Later node tint or global brightness
-changes without rebuilding the item may not trigger a new selection. This
-is not proof of draw-time adaptation to all shader/material effects.
-
-The bridge preserves volatile GPRs, flags, MXCSR and XMM0–XMM5, then executes
-the original increment through the trampoline. Its existing limitation remains:
-no synthetic SEH unwind metadata and no AVX upper-register preservation.
-`noexcept` prevents C++ exception propagation but does not make invalid memory
-or asynchronous exceptions unwind-safe. Do not extend the callback to throw.
-
-No in-game execution or original-loader execution is performed here. Marked
-node persistence, native material behavior, dialogue-only appearance, runtime
-performance, and compatibility with other patches still require user game
-validation. Only the specified 1st executable is accepted; no 2nd compatibility
-is claimed. A successful offline build proves compilation and PE contract,
-not game behavior.
+每个分量使用 `0..1`。修改后运行 `python build.py`，退出游戏，再替换游戏目录中的 `mods/DialogueOutline/DialogueOutline.dll`。颜色和粗细由源码常量及选色函数控制，修改后重新构建生效。

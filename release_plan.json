@@ -1,0 +1,40 @@
+{
+  "repository": "RovingAimer/sora1dialogueoutline",
+  "tag": "v0.3.0",
+  "name": "v0.3.0 · 透明对白与60%自适应描边",
+  "body": "主对白和可选即时对话透明背景；保留文字原色，以实时有效文字色选择纯黑或纯白描边；原偏移阴影副层转换为四周描边。默认厚度为最初粗版的60%，正文、姓名和即时对话统一应用。\n\n主包3个安装文件，可选即时对话包2个安装文件。完整文档和源码保存在仓库。\n\n[安装说明](https://github.com/RovingAimer/sora1dialogueoutline/blob/v0.3.0/INSTALL.md) · [粗细、颜色与自适应算法](https://github.com/RovingAimer/sora1dialogueoutline/blob/v0.3.0/BUILDING.md) · [配套加载器v0.1.1](https://github.com/RovingAimer/sora1looseload/releases/tag/v0.1.1)",
+  "assets": [
+    {
+      "name": "DialogueOutline-v0.3.0-main.zip",
+      "blob_sha": "70f977b71258520e1786dd121c88a234af059cb0",
+      "sha256": "7aef0ccafee65e93e6f424d256b1ca6033e52f6bdb42a64a22f8acccf15e8360",
+      "entries": [
+        "mods/DialogueOutline/DialogueOutline.dll",
+        "layout/subtitle.lay",
+        "asset/dx11/image/window8.dds"
+      ]
+    },
+    {
+      "name": "DialogueOutline-v0.3.0-active-voice.zip",
+      "blob_sha": "9a654f1692966a7a503b83cebd78043744994d8f",
+      "sha256": "49200d1591482815a28fa5870b9334c4404b4aad75bb4b2e86d475d1afd102f2",
+      "entries": [
+        "layout/active_voice.lay",
+        "asset/dx11/image/active_voice.dds"
+      ]
+    }
+  ],
+  "source_hashes_lf": {
+    "build.py": "96e0d246768a84a7be10f290638a9033d2314ec6233e18cc09025ee5b45b7274",
+    "BUILDING.md": "3b471480bc14e2adac386298a66db796c353d2ed9e4448646b2de045205549ca",
+    "LICENSE": "ec122bca1b96594066d4a6934cd9eea6b8ffc080e0c020c38a3a695527947f17",
+    "src/bridge.asm": "4fe37088c46fa09e9751cc9a4646db029a8d828e3c0fc9d01d64dcfb4f58c2c5",
+    "src/core.cpp": "e341c76d4b8b53549d08fb0fa211d4f9337e2000e0bb76bde7cbc8c2e1f20797",
+    "src/DialogueOutline.def": "8405291837687e0caabc5414a3e37932f1b09abf6f06aca12a23c7b43e6f5fbc",
+    "src/DialogueOutline.h": "d99b199cf8f7cb1c869831914ef40f209ee46150e7bb8d6381ec411687d1d976",
+    "src/LicenseNotice.h": "5a7a9e8972dd167d038d9caf47259dfa235c3e525aecf1c506ce46db0298bdbd"
+  },
+  "native_binary_sha256": "90afbc13e451870135e812abfc97eae28bf4286717508985622916d18333c832",
+  "compiler": "MSVC 19.43.34809; Windows SDK 10.0.26100.0",
+  "validation": "User confirmed main dialogue and active voice; no offset shadow; 60% chosen by user; final startup checked locally"
+}
