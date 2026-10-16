@@ -1,6 +1,6 @@
 # 安装、恢复与冲突处理
 
-当前初版是开发候选，尚未实机验证。本文提供手动安装步骤，不是自动安装脚本；项目不会自动向游戏目录写入文件。不要根据本文推断已经生成可发布的 loader 二进制。
+当前初版是开发候选，尚未实机验证。本文提供手动安装步骤，不是自动安装脚本；项目不会自动向游戏目录写入文件。加载器的源码、构建和发布入口见独立 fork；本项目不会自动替换它。
 
 ## 安装前确认
 
@@ -33,11 +33,13 @@
 
 可复用已安装的兼容 UAL。若没有，玩家可自行选择安装[官方 UAL](https://github.com/ThirteenAG/Ultimate-ASI-Loader)；UAL 不随本 Mod 提供，这也不是默认安装步骤。先检查游戏目录中同名入口 DLL 和其他 Mod 的冲突。目标 EXE 静态导入 `d3d11.dll` 与 `dxgi.dll`，这些入口的实机行为待验证；不要随意改名、覆盖已有代理，也不要据此假定 UAL 一定可用。若需要即时对话气泡，另外安装可选即时对话资源包。
 
-### C. 集成 XInput loader（可选）
+### C. 加载器 fork（可选，配合 A 主包）
 
-该方式是可选的 XInput loader 替换。主包不含 `xinput1_4.dll`；可选接入版 loader 单独生成并需玩家明确选择。它必须与 A 主包一起安装，A 提供核心 DLL 与主资源，C loader 负责加载核心。`python build.py` 和 `python build.py --asi` 都不会生成这个 loader。安装前备份当前 `xinput1_4.dll`，确认构建报告、上游基线和校验值，再决定是否替换。不要把旧 v0.2 代理或任意 `proxy.dll` 直接改名成 `xinput1_4.dll` 或 `SoraLooseLoader.dll`。
+加载器的修改、源码和编译产物已经独立到真正的上游 fork：[RovingAimer/sora1looseload](https://github.com/RovingAimer/sora1looseload)。该 fork 保留上游历史与 MIT 协议，当前只增加固定描边模块接入点。原版没有合入这个改动。
 
-在 `source` 目录运行 `python integration/build_loader.py` 可按锁定的上游源码和补丁构建该可选 loader，输出为 `build/optional_loader/xinput1_4.dll` 与构建报告；可选包名为 `1st_初版_可选接入版加载器.zip`。构建过程不安装或运行 DLL，报告标记未实机验证。替换 loader 属于显式升级，可能影响其他依赖它的 Mod。若无法确认构建报告与核心接入调用，不要安装此方式。A 与 C 可以共同使用；不要再同时使用 B ASI。
+从 fork 获取候选加载器及对应源码/构建报告，或在 fork 工作副本中运行 `python build.py`。不要在本 Mod 仓库运行旧的 `integration/build_loader.py`，这里已经不再维护加载器源码。
+
+退出游戏，先备份现有 `xinput1_4.dll`，再明确选择用 fork 的构建替换它，最后合并 A 主包的核心与资源。不需要 `SoraLooseLoader.dll` 或其他 DLL 代理。A 与 C 配合使用；不要再启用 B ASI。原有资源 Mod、输入、启动时机与画面仍需实机核对，不能因接口或编译检查通过就保证运行兼容。
 
 ## 检查与已知限制
 

@@ -1,3 +1,0 @@
-[submodule "external/detours"]
-	path = external/detours
-	url = https://github.com/microsoft/Detours

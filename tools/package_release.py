@@ -16,9 +16,9 @@ def digest(data):
 def source_files():
     files = {}
     for name in ('LICENSE', 'README.md', 'INSTALL.md', 'BUILDING.md', 'THIRD_PARTY.md',
-                 '.gitignore', '.gitattributes', 'build.py', 'resource_patches.json'):
+                 '.gitignore', '.gitattributes', 'build.py', 'resource_patches.json', 'loader.lock.json'):
         files[name] = (ROOT / name).read_bytes()
-    for folder in ('src', 'tools', 'integration', 'third_party', '.github'):
+    for folder in ('src', 'tools', 'integration', '.github'):
         directory = ROOT / folder
         if not directory.exists():
             continue
@@ -72,6 +72,7 @@ def main():
     common['build_evidence/core_report.json'] = (ROOT / 'build/core_report.json').read_bytes()
     metadata = dict(version='initial-development-candidate', source_tree_sha256=source_id,
                     code_license='MIT', target_exe_sha256=TARGET_HASH,
+                    loader_repository='https://github.com/RovingAimer/sora1looseload',
                     game_runtime_verified=False, sky_2nd_supported=False,
                     replaces_shared_shaders=False, preserves_original_text_color=True,
                     runtime_selection='Per glyph item generation; highest black/white sRGB contrast',
@@ -97,27 +98,6 @@ def main():
         asi_files = {**common, 'plugins/DialogueOutline.asi': dll}
         asi_files.update({name: data for name, data in main_files.items() if name.endswith(('.lay', '.dds'))})
         plans.append(('1st_初版_可选ASI入口.zip', asi_files, 'optional-ual-initializeasi'))
-    loader = ROOT / 'build/optional_loader/xinput1_4.dll'
-    if loader.exists():
-        report_path = ROOT / 'build/optional_loader/report.json'
-        loader_report = json.loads(report_path.read_text(encoding='utf-8'))
-        integration_inputs = {path.name: path for path in (ROOT / 'integration').iterdir() if path.is_file()}
-        verify_native_report(report_path, loader, loader_report['integration_sha256'], integration_inputs)
-        vendor = ROOT / 'third_party/sora1looseload'
-        lock_path = vendor / 'UPSTREAM_LOCK.json'
-        if digest(lock_path.read_bytes()) != loader_report['upstream_lock_sha256']:
-            raise ValueError('Upstream lock changed; rebuild the optional loader')
-        lock = json.loads(lock_path.read_text(encoding='utf-8'))
-        for name, record in lock['files'].items():
-            if digest((vendor / name).read_bytes()) != record['sha256']:
-                raise ValueError(f'Vendored source changed: {name}')
-        loader_files = {**common, 'xinput1_4.dll': loader.read_bytes()}
-        loader_files['build_evidence/loader_report.json'] = report_path.read_bytes()
-        loader_files['build_evidence/UPSTREAM_LOCK.json'] = lock_path.read_bytes()
-        for name, data in sources.items():
-            if name.startswith('third_party/') and (Path(name).name.lower().startswith(('license', 'copying', 'notice')) or name.endswith('LICENSE.md')):
-                loader_files[name] = data
-        plans.append(('1st_初版_可选接入版加载器.zip', loader_files, 'optional-replacement-loader-requires-main'))
     OUTPUT.mkdir(parents=True, exist_ok=True)
     artifacts = [write_zip('DialogueOutline_初版_MIT源码.zip', sources)]
     for name, files, route in plans:
