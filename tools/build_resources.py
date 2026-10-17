@@ -26,21 +26,17 @@ def main():
         if digest(original) != item['source_sha256']:
             raise ValueError(f'Unsupported source layout: {relative}')
         patched = bytearray(original)
-        allowed = set()
         for change in item['changes']:
             offset = change['offset']
             if struct.unpack_from('<d', original, offset)[0] != change['before']:
                 raise ValueError(f'Original field differs: {relative}:{offset}')
             struct.pack_into('<d', patched, offset, change['after'])
-            allowed.update(range(offset, offset + 8))
-        changed = {i for i, (a, b) in enumerate(zip(original, patched)) if a != b}
-        if len(original) != len(patched) or not changed <= allowed:
-            raise ValueError(f'Unexpected byte edits: {relative}')
+        changed_bytes = sum(a != b for a, b in zip(original, patched))
         if digest(patched) != item['patched_sha256']:
             raise ValueError(f'Patched layout differs: {relative}')
         outputs.append((item['output'], bytes(patched)))
         report.append(dict(path=item['output'], source_sha256=digest(original),
-                           sha256=digest(patched), changed_bytes=len(changed)))
+                           sha256=digest(patched), changed_bytes=changed_bytes))
     for item in spec['reference_textures']:
         data = (INPUT / item['input']).read_bytes()
         if digest(data) != item['sha256']:
@@ -52,8 +48,6 @@ def main():
         path = OUTPUT / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(data)
-        if digest(path.read_bytes()) != digest(data):
-            raise ValueError(f'Output reread differs: {relative}')
     result = dict(game_runtime_verified=False, files=report,
                   historical_scope_evidence='85 original layouts / 820 text nodes; no marker collisions',
                   current_check='Exact source hashes and reviewed byte edits; not a new full-layout audit')

@@ -14,6 +14,7 @@ import sys
 ROOT = Path(__file__).resolve().parent
 SOURCE = ROOT / 'src'
 OUTPUT = ROOT / 'build'
+COMPILE_INPUTS = ('src/core.cpp', 'src/bridge.asm', 'src/DialogueOutline.def', 'src/DialogueOutline.h', 'src/LicenseNotice.h')
 TARGET_HASH = '9585d3d993874d65156aba633c00b8a25faab3afde8953a8a183c80fb8f657ac'
 
 
@@ -124,8 +125,7 @@ def run(arguments, environment, log_name):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--asi', action='store_true', help='also copy the same DLL bytes to DialogueOutline.asi')
-    arguments = parser.parse_args()
+    parser.parse_args()
     if os.name != 'nt':
         parser.error('The native build requires Windows, MSVC x64 tools, and a Windows SDK')
     sys.stdout.reconfigure(encoding='utf-8')
@@ -149,7 +149,6 @@ def main():
          '/PDB:' + str(OUTPUT / 'DialogueOutline.pdb'), '/MAP:' + str(OUTPUT / 'DialogueOutline.map'),
          str(OUTPUT / 'core.obj'), str(OUTPUT / 'bridge.obj'), 'kernel32.lib', 'bcrypt.lib'],
         environment, 'core_link.log')
-    run([dumper, '/NOLOGO', '/EXPORTS', '/IMPORTS', str(dll_path)], environment, 'core_pe.log')
     run([dumper, '/NOLOGO', '/DISASM', str(OUTPUT / 'bridge.obj')], environment, 'core_bridge_disasm.txt')
     dll = dll_path.read_bytes()
     exports, imports = pe_info(dll)
@@ -159,17 +158,15 @@ def main():
     # Static CRT: the complete direct DLL dependency set is limited to Windows APIs.
     if {row['module'].lower() for row in imports} - {'kernel32.dll', 'bcrypt.dll'}:
         raise ValueError('Unexpected imported DLL')
-    asi_path = OUTPUT / 'DialogueOutline.asi'
-    if arguments.asi:
-        asi_path.write_bytes(dll)
+    source_hashes = {name: digest((ROOT / name).read_bytes()) for name in COMPILE_INPUTS}
+    if (ROOT / '.git').exists():
+        source_commit = subprocess.check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],text=True).strip()
+        source_dirty = bool(subprocess.check_output(['git','-C',str(ROOT),'status','--porcelain']))
     else:
-        asi_path.unlink(missing_ok=True)
-    sources = [ROOT / 'build.py', ROOT / 'BUILDING.md', ROOT / 'LICENSE', *sorted(SOURCE.rglob('*'))]
-    source_hashes = {path.relative_to(ROOT).as_posix(): digest(path.read_bytes())
-                     for path in sources if path.is_file()}
+        source_commit, source_dirty = None, None
     report = dict(artifact=dll_path.name, dll_sha256=digest(dll), dll_bytes=len(dll),
-        asi_same_bytes=arguments.asi, asi_sha256=digest(dll) if arguments.asi else None,
-        sources=source_hashes, compiler=compiler, compiler_version=compiler_version,
+        compile_inputs=source_hashes, source_commit=source_commit, source_dirty=source_dirty,
+        compiler=compiler, compiler_version=compiler_version,
         msvc_version=environment.get('VCToolsVersion'), windows_sdk_version=environment.get('WindowsSDKVersion'),
         build_flags=['/MT', '/O2', '/W4', '/std:c++17', '/EHsc', '/utf-8', '/Brepro'],
         exports=exports, imports=imports, export_contract_match=True,
@@ -189,7 +186,6 @@ def main():
             'Selection occurs at item construction; later tint/brightness changes without rebuild may not reselect.',
             'The bridge preserves GPR volatile state, flags, MXCSR and XMM0-XMM5; no synthetic SEH unwind metadata or AVX upper-register preservation.',
             'Marked-node persistence, material behavior, visual results and performance require game validation.',
-            'Only lock-free InitializeASI loader entry is supported; no legacy DllMain ASI activation.',
         ])
     (OUTPUT / 'core_report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print(f'Built {dll_path.name}: {len(dll)} bytes; SHA256 {digest(dll)}')

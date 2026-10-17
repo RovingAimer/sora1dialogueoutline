@@ -3,7 +3,7 @@ name: Build native source
 on:
   workflow_dispatch:
   push:
-    tags: ['initial-*', 'v*']
+    tags: ['v*']
 
 permissions:
   contents: read
@@ -13,13 +13,12 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build standalone core and optional ASI
-        run: python build.py --asi
+      - name: Build standalone core
+        run: python build.py
       - uses: actions/upload-artifact@v4
         with:
           name: native-build-${{ github.sha }}
           path: |
             build/DialogueOutline.dll
-            build/DialogueOutline.asi
             build/core_report.json
           if-no-files-found: error

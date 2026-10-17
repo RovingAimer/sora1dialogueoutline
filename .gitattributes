@@ -1,3 +1,2 @@
-# Preserve exact upstream bytes required by UPSTREAM_LOCK.json on every host.
-# In particular, Windows core.autocrlf must not rewrite vendored source files.
+# Preserve exact native/resource specification bytes and recorded hashes.
 * -text

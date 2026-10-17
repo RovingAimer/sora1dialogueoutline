@@ -1,38 +1,31 @@
-name: Publish verified installation files
+name: Publish explicitly prepared artifacts
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths: ['release_plan.json', '.github/workflows/publish.yml']
+    inputs:
+      run_id:
+        description: Run containing the accepted prepared artifact
+        required: true
+      artifact_name:
+        description: Artifact with ZIPs, release_manifest.json, native-build-report.json and publish_plan.json
+        required: true
 
 permissions:
   contents: write
+  actions: read
 
 jobs:
-  build:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Build native source
-        run: python build.py
-      - uses: actions/upload-artifact@v4
-        with:
-          name: native-build-${{ github.sha }}
-          path: |
-            build/*.dll
-            build/*report.json
-          if-no-files-found: error
   publish:
-    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
         with:
-          submodules: recursive
-      - name: Verify source and publish installation files
+          name: ${{ inputs.artifact_name }}
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ github.token }}
+          path: prepared
+      - name: Publish accepted prepared files with explicit future release plan
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python tools/publish_release.py
+        run: python tools/publish_release.py --packages prepared --plan prepared/publish_plan.json --publish

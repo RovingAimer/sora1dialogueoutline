@@ -1,31 +1,29 @@
 # sora1dialogueoutline
 
-《空之轨迹 the 1st》对白透明背景与自适应文字描边 Mod。保留文字原色，以黑色或白色描边提高可读性，并移除对白文字的偏移阴影。
+《空之轨迹 the 1st》对白透明背景与自适应文字描边 Mod。正文、姓名和可选的带头像即时对白横条保留原文字色，并显示黑色或白色描边。
 
-## 下载与安装
+## 已发布下载
 
-当前发布为 [v0.1.0](https://github.com/RovingAimer/sora1dialogueoutline/releases/tag/v0.1.0)。
+DialogueOutline v0.1.0 配合通用加载器 v0.2.0 使用，字幕描边已由用户再次实机确认正常。
 
 | 下载 | 用途 |
 | --- | --- |
-| [配套加载器 v0.1.0](https://github.com/RovingAimer/sora1looseload/releases/tag/v0.1.0) | 加载对白核心，安装文件为 `xinput1_4.dll`。 |
+| [配套加载器 v0.2.0](https://github.com/RovingAimer/sora1looseload/releases/tag/v0.2.0) | 安装文件为 `xinput1_4.dll` 与字幕模块声明。 |
 | [主包](https://github.com/RovingAimer/sora1dialogueoutline/releases/download/v0.1.0/DialogueOutline-v0.1.0-main.zip) | 必装：主对白正文、姓名描边及透明背景。 |
-| [即时对白横条包](https://github.com/RovingAimer/sora1dialogueoutline/releases/download/v0.1.0/DialogueOutline-v0.1.0-active-voice.zip) | 可选：带头像的即时对白横条，背景透明、文字描边；与主包一起使用。 |
+| [即时对白横条包](https://github.com/RovingAimer/sora1dialogueoutline/releases/download/v0.1.0/DialogueOutline-v0.1.0-active-voice.zip) | 可选：带头像的即时对白横条背景透明和文字描边；与主包一起使用。 |
 
-退出游戏并备份将被覆盖的文件，先安装配套加载器，再将主包解压合并到 `sora_1st.exe` 所在目录；需要即时对白横条效果时，再合并可选包。保留 ZIP 内的目录结构。
+本核心提供通用模块入口；加载器 v0.2.0 安装包提供 `mods/DialogueOutline/sora_mod.ini` 声明文件。兼容来源及验收状态见 [loader.lock.json](loader.lock.json)。
 
-仅支持 [INSTALL.md](INSTALL.md) 列出的游戏 EXE 版本。该文档包含完整文件清单、版本核对和卸载恢复步骤。人物头顶跟随角色移动的气泡暂未纳入此发布。
+## 安装与恢复
 
-## 方案与当前实现
+退出游戏并备份将被覆盖的文件。安装通用加载器 v0.2.0；再将主包解压合并到 `sora_1st.exe` 所在目录。需要带头像即时对白横条时再合并可选包，并保留 ZIP 内的目录结构。
 
-布局补丁为主对白正文、姓名及可选即时对白横条的文字节点写入专属标记；DDS 提供对应背景的透明贴图。核心在游戏构建字形副层时检查标记，将偏移阴影项转换为原生描边几何。这一接入点能使用实际字形和有效文字色，并将描边范围限定到带标记的对白节点。
+仅支持 [INSTALL.md](INSTALL.md) 列出的游戏 EXE 版本。资源补丁覆盖正文、姓名和可选横条；角色头顶随人物移动的气泡不属于当前资源范围。
 
-核心保留填充文字的 RGB 与 alpha，在每个字形项创建时按文字色选择对比度更高的纯黑或纯白描边。选色使用填充 RGB 与节点 RGB 的乘积；后续颜色变化在字形项重建时重新计算。默认线宽系数为 `0.60`。
+卸载时退出游戏，按安装清单逐文件恢复备份；安装前不存在的文件可移除。保留其他 Mod 文件。
 
-粗细、固定颜色、自定义 RGB 和自适应算法的调整方式见 [BUILDING.md](BUILDING.md)。当前资源覆盖与显示行为见 [VISUAL_FIX.md](VISUAL_FIX.md)，加载器接入约定见 [integration/README.md](integration/README.md)。
+DLL 会在游戏进程内以当前玩家账户权限运行代码，可能影响游戏稳定性、文件和数据。只使用可信来源。完整源码、构建步骤和许可证见 [BUILDING.md](BUILDING.md)、[LICENSE](LICENSE) 与 [THIRD_PARTY.md](THIRD_PARTY.md)；可自行编译并将附件 SHA256 与发布清单核对。
 
-## 源码与授权
+## 当前实现
 
-核心源码在本仓库，配套加载器源码在 [sora1looseload](https://github.com/RovingAimer/sora1looseload)。构建步骤和资源输入说明见 [BUILDING.md](BUILDING.md)。安装 ZIP 仅包含安装文件，GitHub 下载区的 `Source code` 为源码归档。
-
-核心与构建代码采用 [MIT](LICENSE)，完整许可通知嵌入 DLL。加载器、依赖、DDS 与游戏资源的来源和许可见 [THIRD_PARTY.md](THIRD_PARTY.md)。
+布局补丁为正文、姓名和可选即时对白横条的文字节点写入专属标记；DDS 提供对应透明背景。核心在字形副层构建时识别标记，将偏移阴影项转为原生描边几何，并在字形项创建时按有效文字色选择黑色或白色。核心保留填充文字 RGB 与 alpha，默认线宽系数为 `0.60`。算法、兼容入口、构建与资源来源见 [BUILDING.md](BUILDING.md)、[integration/README.md](integration/README.md) 和 [VISUAL_FIX.md](VISUAL_FIX.md)。

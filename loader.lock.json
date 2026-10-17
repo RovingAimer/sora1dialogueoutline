@@ -1,12 +1,35 @@
 {
-  "repository": "https://github.com/RovingAimer/sora1looseload",
-  "upstream_repository": "https://github.com/Hinkiii/sora1looseload",
-  "upstream_commit": "04e898e369e3019d5aa2cb13a7209de39c643a4a",
-  "integration_commit": "e8e74f154409f8bd29f0627c7341a8f22bb90a05",
-  "module_path": "mods/DialogueOutline/DialogueOutline.dll",
-  "initialize_export": "SoraDialogueInitialize",
-  "generic_plugin_framework": false,
-  "offline_candidate_loader_sha256": "bffe52ead5a04f42978ec6b63feafe729d812974c11493b3cd5cada38910c486",
-  "game_runtime_verified": true,
-  "validation_scope": "Startup and scene runtime check; main dialogue and active voice banner rendering."
+  "published_loader_v0_1_0": {
+    "repository": "https://github.com/RovingAimer/sora1looseload",
+    "upstream_repository": "https://github.com/Hinkiii/sora1looseload",
+    "upstream_commit": "04e898e369e3019d5aa2cb13a7209de39c643a4a",
+    "integration_source_commit": "e8e74f154409f8bd29f0627c7341a8f22bb90a05",
+    "module_path": "mods/DialogueOutline/DialogueOutline.dll",
+    "initialize_export": "SoraDialogueInitialize",
+    "validated_binary_sha256": "bffe52ead5a04f42978ec6b63feafe729d812974c11493b3cd5cada38910c486",
+    "game_runtime_verified": true,
+    "validation_scope": "Startup and scene runtime check; main dialogue and active voice banner rendering."
+  },
+  "published_loader_v0_2_0": {
+    "repository": "https://github.com/RovingAimer/sora1looseload",
+    "version": "0.2.0",
+    "module_declaration": {
+      "path": "mods/DialogueOutline/sora_mod.ini",
+      "api": 1,
+      "dll": "DialogueOutline.dll",
+      "initialize_export": "SoraDialogueInitialize"
+    },
+    "game_runtime_verified": true,
+    "status": "user-accepted-release",
+    "release_url": "https://github.com/RovingAimer/sora1looseload/releases/tag/v0.2.0",
+    "source_commit": "2d0ac9bf9a549f3e15d0cf8555fbebaf8cb3e5e5",
+    "validated_binary_sha256": "e47c8bfae41300bd6940340d1a281d8b96ff0cca0bb802c3ffe630ab9ebbf7fa",
+    "runtime_acceptance": {
+      "date": "2026-10-17",
+      "user_statement": "测试正常，字幕描边和相机反虚化都没问题，可以发布加载器0.2.0和相机反虚化0.1.0了",
+      "game_runtime_verified": true,
+      "exe_sha256": "9585d3d993874d65156aba633c00b8a25faab3afde8953a8a183c80fb8f657ac",
+      "scope": "用户确认字幕描边和相机反虚化正常；未扩展为其他场景或版本兼容承诺。"
+    }
+  }
 }
