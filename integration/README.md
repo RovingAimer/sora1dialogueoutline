@@ -1,6 +1,6 @@
 # 加载器接入
 
-配套 [通用加载器 v0.2.0](https://github.com/RovingAimer/sora1looseload/releases/tag/v0.2.0) 在资源 hook 尝试之后扫描 `mods` 的一级子目录；源码和验收记录见 [loader.lock.json](../loader.lock.json)。加载器安装包提供以下声明：
+配套 [通用加载器 v0.2.0](https://github.com/RovingAimer/sora1looseload/releases/tag/v0.2.0) 在资源 hook 尝试之后扫描 `mods` 的一级子目录；源码和验收记录见 [loader.lock.json](../loader.lock.json)。字幕 v0.1.1 主包和配置更新包均提供 `mods/DialogueOutline/sora_mod.ini`：
 
 ```ini
 [SoraMod]

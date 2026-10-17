@@ -18,11 +18,11 @@ python tools/build_resources.py
 
 ## 加载器兼容与当前工具
 
-对白 v0.1.0 配合 [通用加载器 v0.2.0](https://github.com/RovingAimer/sora1looseload/releases/tag/v0.2.0) 使用，组合已通过用户实机验收。加载器安装包中的模块声明指向 `SoraDialogueInitialize`；兼容来源见 [integration/README.md](integration/README.md) 和 [loader.lock.json](loader.lock.json)。
+对白 v0.1.1 配合 [通用加载器 v0.2.0](https://github.com/RovingAimer/sora1looseload/releases/tag/v0.2.0) 使用，组合已通过用户实机验收。字幕主包和独立配置更新包均提供 `mods/DialogueOutline/sora_mod.ini`，声明指向 `SoraDialogueInitialize`；兼容来源见 [integration/README.md](integration/README.md) 和 [loader.lock.json](loader.lock.json)。
 
 `src/DialogueOutline.def` 保留 `InitializeASI` 导出；通用模块入口为 `SoraDialogueInitialize`。原生构建命令为 `python build.py`。
 
-字幕 v0.1.0 的 `release_plan.json` 是原发布来源记录，保持不变，记录原安装附件、90afbc DLL 和其原编译源码提交 `d8cf964fe1914cecc95296b86f752cc0eef9abbb`。当前文档更新不代表重编译了该 DLL。
+v0.1.1 仅补充模块配置，复用已验收的 `90afbc` DLL、布局和贴图。原二进制编译来源为 `d8cf964fe1914cecc95296b86f752cc0eef9abbb`，原始编译输入及安装附件记录保存在 `release_plan.json`。
 
 ## 当前描边实现
 
@@ -64,7 +64,7 @@ RGB 每个分量使用 `0..1`。修改后重新运行 `python build.py`；只有
 python tools/package_release.py --source-only
 ```
 
-该命令只准备源码 ZIP，不生成或重发 v0.1.0 安装 ZIP。输出位于 `build/packages/`，包含按当前提交命名的 `DialogueOutline-v0.1.0-source-<commit-12位>.zip`、`release_manifest.json` 和原 `native-build-report.json`。清单记录当前源码提交、复用的 90afbc DLL、原二进制来源提交和编译输入。
+该命令准备 `DialogueOutline-v0.1.1-source.zip`。完整打包使用 `python tools/package_release.py`，生成主包、可选即时对白横条包、仅含 `sora_mod.ini` 的配置更新包及源码包。输出位于 `build/packages/`，安装 ZIP 只含对应安装文件。清单 `release_manifest.json` 记录当前源码提交、复用的 DLL、原二进制来源提交和编译输入；`native-build-report.json` 保留原编译报告。清单及报告留作发布核验资料。
 
 `python tools/publish_release.py` 默认验证已准备的本地附件并输出预览，不访问网络。未来版本的公开发布入口需要显式的 `--publish --plan PATH`；历史 `release_plan.json` 仅保留 v0.1.0 来源记录。
 

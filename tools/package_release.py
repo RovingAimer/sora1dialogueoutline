@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / 'build/packages'
 sys.path.insert(0, str(ROOT))
 import build
-VERSION = '0.1.0'
+VERSION = '0.1.1'
 TARGET_HASH = '9585d3d993874d65156aba633c00b8a25faab3afde8953a8a183c80fb8f657ac'
 
 
@@ -24,7 +24,7 @@ def source_files():
     for name in ('LICENSE', 'README.md', 'INSTALL.md', 'BUILDING.md', 'THIRD_PARTY.md', 'VISUAL_FIX.md',
                  '.gitignore', '.gitattributes', 'build.py', 'resource_patches.json', 'loader.lock.json', 'release_plan.json'):
         files[name] = (ROOT / name).read_bytes()
-    for folder in ('src', 'tools', 'integration', '.github'):
+    for folder in ('src', 'tools', 'integration', 'mods', '.github'):
         directory = ROOT / folder
         if not directory.exists():
             continue
@@ -66,7 +66,7 @@ def verify_native_report(report, artifact):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--source-only', action='store_true', help='Prepare only current source; do not reissue v0.1.0 installation ZIPs')
+    parser.add_argument('--source-only', action='store_true', help='Prepare only the current source snapshot')
     args = parser.parse_args()
     sources = source_files()
     if (ROOT/'.git').exists():
@@ -86,14 +86,15 @@ def main():
                     compile_inputs=compile_inputs, binary_reused='compile_inputs' not in core_report,
                     code_license='MIT', target_exe_sha256=TARGET_HASH,
                     loader_repository='https://github.com/RovingAimer/sora1looseload',
-                    game_runtime_verified=False, sky_2nd_supported=False,
+                    packaging_runs_game=False, sky_2nd_supported=False,
                     replaces_shared_shaders=False, preserves_original_text_color=True,
                     runtime_selection='Per glyph item generation; highest black/white sRGB contrast',
-                    original_loader_support='v0.1.0 integrated loader; generic loader 0.2.0 uses SoraDialogueInitialize declaration',
+                    loader_support='Generic loader v0.2.0; bundled sora_mod.ini declares SoraDialogueInitialize',
                     core_sha256=digest(dll))
     plans = []
     if not args.source_only:
-        main_files = {'mods/DialogueOutline/DialogueOutline.dll': dll}
+        config_files = {'mods/DialogueOutline/sora_mod.ini': (ROOT/'mods/DialogueOutline/sora_mod.ini').read_bytes()}
+        main_files = {'mods/DialogueOutline/DialogueOutline.dll': dll, **config_files}
         resources = ROOT / 'build/resources'
         optional_files = {}
         spec = json.loads((ROOT / 'resource_patches.json').read_text(encoding='utf-8'))
@@ -104,15 +105,16 @@ def main():
                 raise ValueError(f'Resource differs from reviewed specification: {relative}')
             target = main_files if relative.parts[0] == 'main' else optional_files
             target[Path(*relative.parts[1:]).as_posix()] = data
-        if set(main_files) != {'mods/DialogueOutline/DialogueOutline.dll', 'layout/subtitle.lay',
+        if set(main_files) != {'mods/DialogueOutline/DialogueOutline.dll', 'mods/DialogueOutline/sora_mod.ini', 'layout/subtitle.lay',
                                'asset/dx11/image/window8.dds'}:
             raise ValueError('Main installation file set differs')
         if set(optional_files) != {'layout/active_voice.lay', 'asset/dx11/image/active_voice.dds'}:
             raise ValueError('Active-voice installation file set differs')
-        plans = [(f'DialogueOutline-v{VERSION}-main.zip', main_files, 'original-loader-integration-required'),
+        plans = [(f'DialogueOutline-v{VERSION}-config.zip', config_files, 'configuration-only-update'),
+                 (f'DialogueOutline-v{VERSION}-main.zip', main_files, 'generic-loader-v0.2.0-required'),
                  (f'DialogueOutline-v{VERSION}-active-voice.zip', optional_files, 'optional-active-voice-requires-main')]
     OUTPUT.mkdir(parents=True, exist_ok=True)
-    artifacts = [write_zip(f'DialogueOutline-v{VERSION}-source-{source_commit[:12]}.zip', sources)]
+    artifacts = [write_zip(f'DialogueOutline-v{VERSION}-source.zip', sources)]
     for name, files, route in plans:
         artifact = write_zip(name, files)
         artifact.update(route=route,

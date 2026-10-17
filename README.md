@@ -4,19 +4,23 @@
 
 ## 已发布下载
 
-DialogueOutline v0.1.0 配合通用加载器 v0.2.0 使用，字幕描边已由用户再次实机确认正常。
+DialogueOutline v0.1.1 配合通用加载器 v0.2.0 使用。此版仅新增模块配置 `sora_mod.ini`；字幕 DLL、布局、贴图及描边效果保持不变。
 
 | 下载 | 用途 |
 | --- | --- |
-| [配套加载器 v0.2.0](https://github.com/RovingAimer/sora1looseload/releases/tag/v0.2.0) | 安装文件为 `xinput1_4.dll` 与字幕模块声明。 |
-| [主包](https://github.com/RovingAimer/sora1dialogueoutline/releases/download/v0.1.0/DialogueOutline-v0.1.0-main.zip) | 必装：主对白正文、姓名描边及透明背景。 |
-| [即时对白横条包](https://github.com/RovingAimer/sora1dialogueoutline/releases/download/v0.1.0/DialogueOutline-v0.1.0-active-voice.zip) | 可选：带头像的即时对白横条背景透明和文字描边；与主包一起使用。 |
+| [配置更新包](https://github.com/RovingAimer/sora1dialogueoutline/releases/download/v0.1.1/DialogueOutline-v0.1.1-config.zip) | 已安装字幕 Mod 的玩家使用：仅补充 `mods/DialogueOutline/sora_mod.ini`。 |
+| [主包](https://github.com/RovingAimer/sora1dialogueoutline/releases/download/v0.1.1/DialogueOutline-v0.1.1-main.zip) | 新安装使用：主对白正文、姓名描边及透明背景，包含模块配置。 |
+| [即时对白横条包](https://github.com/RovingAimer/sora1dialogueoutline/releases/download/v0.1.1/DialogueOutline-v0.1.1-active-voice.zip) | 可选：带头像的即时对白横条背景透明和文字描边；与主包一起使用。 |
+| [完整源码包](https://github.com/RovingAimer/sora1dialogueoutline/releases/download/v0.1.1/DialogueOutline-v0.1.1-source.zip) | 源码、模块配置、构建方法和许可证，供查验或自行编译。 |
+| [配套加载器 v0.2.0](https://github.com/RovingAimer/sora1looseload/releases/tag/v0.2.0) | 提供 `xinput1_4.dll`，统一加载带配置的模块。 |
 
-本核心提供通用模块入口；加载器 v0.2.0 安装包提供 `mods/DialogueOutline/sora_mod.ini` 声明文件。兼容来源及验收状态见 [loader.lock.json](loader.lock.json)。
+主包与配置更新包均提供字幕自己的模块配置。已存在相同配置时无需重复安装。配置内容和接入方法见 [integration/README.md](integration/README.md)，兼容来源及实机验收记录见 [loader.lock.json](loader.lock.json)。
 
 ## 安装与恢复
 
 退出游戏并备份将被覆盖的文件。安装通用加载器 v0.2.0；再将主包解压合并到 `sora_1st.exe` 所在目录。需要带头像即时对白横条时再合并可选包，并保留 ZIP 内的目录结构。
+
+已安装字幕 Mod 的玩家升级时，只需将配置更新包合并到游戏目录。通过加载器 v0.2.0 安装包补齐过同一配置的玩家可继续使用现有文件。
 
 仅支持 [INSTALL.md](INSTALL.md) 列出的游戏 EXE 版本。资源补丁覆盖正文、姓名和可选横条；角色头顶随人物移动的气泡不属于当前资源范围。
 
