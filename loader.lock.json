@@ -1,15 +1,4 @@
 {
-  "published_loader_v0_1_0": {
-    "repository": "https://github.com/RovingAimer/sora1looseload",
-    "upstream_repository": "https://github.com/Hinkiii/sora1looseload",
-    "upstream_commit": "04e898e369e3019d5aa2cb13a7209de39c643a4a",
-    "integration_source_commit": "e8e74f154409f8bd29f0627c7341a8f22bb90a05",
-    "module_path": "mods/DialogueOutline/DialogueOutline.dll",
-    "initialize_export": "SoraDialogueInitialize",
-    "validated_binary_sha256": "bffe52ead5a04f42978ec6b63feafe729d812974c11493b3cd5cada38910c486",
-    "game_runtime_verified": true,
-    "validation_scope": "Startup and scene runtime check; main dialogue and active voice banner rendering."
-  },
   "published_loader_v0_2_0": {
     "repository": "https://github.com/RovingAimer/sora1looseload",
     "version": "0.2.0",
@@ -30,6 +19,13 @@
       "game_runtime_verified": true,
       "exe_sha256": "9585d3d993874d65156aba633c00b8a25faab3afde8953a8a183c80fb8f657ac",
       "scope": "用户确认字幕描边和相机反虚化正常；未扩展为其他场景或版本兼容承诺。"
+    },
+    "dialogue_runtime_acceptance": {
+      "date": "2026-10-18",
+      "user_statement": "这次热更新和姓名字号调整都正常了，保存后下一条对白就能生效。",
+      "tested_core_commit": "54ec8c596b9200926a1f330d6cee8f0fd6086f29",
+      "tested_core_sha256": "0295d238a99b404046e26051a2cb474cf37d7544b9accd9fed341b1e2f88b88a",
+      "scope": "Main dialogue saved settings and independent name size apply on the next new dialogue."
     }
   }
 }

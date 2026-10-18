@@ -4,6 +4,8 @@
 #define NOMINMAX
 #include "DialogueOutline.h"
 #include "LicenseNotice.h"
+#include "dialogue_layout.h"
+#include "runtime_config.h"
 #include <bcrypt.h>
 #include <cmath>
 #include <cstdint>
@@ -93,7 +95,15 @@ double linear_channel(float value) noexcept {
 
 extern "C" {
 PVOID volatile gSoraTrampoline = nullptr;
+PVOID volatile gSoraPrepareTrampoline = nullptr;
+PVOID volatile gSoraPositionTrampoline = nullptr;
+PVOID volatile gSoraSpacingTrampoline = nullptr;
+PVOID volatile gSoraDestroyTrampoline = nullptr;
 void SoraHookBridge();
+void SoraPrepareBridge();
+void SoraPositionBridge();
+void SoraSpacingBridge();
+void SoraDestroyBridge();
 
 DWORD WINAPI SoraChooseOutline(float r, float g, float b) noexcept {
     const double luminance = .2126 * linear_channel(r) + .7152 * linear_channel(g) + .0722 * linear_channel(b);
@@ -146,38 +156,40 @@ void SoraOutlineCallbackWithScale(const unsigned char* node, const unsigned char
 }
 
 namespace {
-bool install_hook() noexcept {
-    auto* target = reinterpret_cast<unsigned char*>(GetModuleHandleW(nullptr)) + kHookRva;
-    auto* aligned = target - 1;
+bool install_site(std::uintptr_t rva, unsigned span, unsigned prefix,
+                  const unsigned char (&original)[8], const void* bridgeAddress,
+                  PVOID volatile* destination) noexcept {
+    auto* target = reinterpret_cast<unsigned char*>(GetModuleHandleW(nullptr)) + rva;
+    auto* aligned = target - prefix;
     if (reinterpret_cast<std::uintptr_t>(aligned) % 8 != 0 ||
-        std::memcmp(aligned, kOriginal8, sizeof(kOriginal8)) != 0) {
+        std::memcmp(aligned, original, sizeof(original)) != 0) {
         // A second core/ASI or another patch owns this site. Do not claim its hook.
         status(HookConflict);
         return false;
     }
-    status(OriginalBytesMatch);
+    if (rva == kHookRva) status(OriginalBytesMatch);
     auto* page = allocate_near(reinterpret_cast<std::uintptr_t>(target));
     if (!page) return false;
     // Relay is an absolute indirect JMP; its pointer is inline, so it clobbers no registers.
     const unsigned char absoluteJump[] = {0xFF, 0x25, 0, 0, 0, 0};
     std::memcpy(page, absoluteJump, sizeof(absoluteJump));
-    const auto bridge = reinterpret_cast<std::uintptr_t>(&SoraHookBridge);
+    const auto bridge = reinterpret_cast<std::uintptr_t>(bridgeAddress);
     std::memcpy(page + 6, &bridge, sizeof(bridge));
     auto* trampoline = page + 0x20;
-    std::memcpy(trampoline, target, 6);
+    std::memcpy(trampoline, original + prefix, span);
     unsigned char replacement[8];
-    std::memcpy(replacement, kOriginal8, sizeof(replacement));
+    std::memcpy(replacement, original, sizeof(replacement));
     // Encode the target jump using the actual target address, not this stack buffer.
     const auto delta = reinterpret_cast<std::intptr_t>(page) - reinterpret_cast<std::intptr_t>(target + 5);
     if (delta < (std::numeric_limits<std::int32_t>::min)() ||
         delta > (std::numeric_limits<std::int32_t>::max)() ||
-        !relative_jump(trampoline + 6, target + 6)) {
+        !relative_jump(trampoline + span, target + span)) {
         VirtualFree(page, 0, MEM_RELEASE); return false;
     }
-    replacement[1] = 0xE9;
+    replacement[prefix] = 0xE9;
     const auto displacement = static_cast<std::int32_t>(delta);
-    std::memcpy(replacement + 2, &displacement, sizeof(displacement));
-    replacement[6] = 0x90;
+    std::memcpy(replacement + prefix + 1, &displacement, sizeof(displacement));
+    for (unsigned i = 5; i < span; ++i) replacement[prefix + i] = 0x90;
     DWORD oldPageProtection = 0;
     if (!VirtualProtect(page, 4096, PAGE_EXECUTE_READ, &oldPageProtection) ||
         !FlushInstructionCache(GetCurrentProcess(), page, 4096)) {
@@ -188,9 +200,9 @@ bool install_hook() noexcept {
         VirtualFree(page, 0, MEM_RELEASE); return false;
     }
     LONG64 expected, desired;
-    std::memcpy(&expected, kOriginal8, sizeof(expected));
+    std::memcpy(&expected, original, sizeof(expected));
     std::memcpy(&desired, replacement, sizeof(desired));
-    InterlockedExchangePointer(&gSoraTrampoline, trampoline);
+    InterlockedExchangePointer(destination, trampoline);
     const bool installed = InterlockedCompareExchange64(reinterpret_cast<volatile LONG64*>(aligned),
                                                         desired, expected) == expected;
     DWORD ignored = 0;
@@ -199,13 +211,34 @@ bool install_hook() noexcept {
     if (!installed) {
         status(HookConflict);
         if (!restored || !flushed) status(MemoryFinalizeFailed);
-        InterlockedExchangePointer(&gSoraTrampoline, nullptr);
+        InterlockedExchangePointer(destination, nullptr);
         VirtualFree(page, 0, MEM_RELEASE);
         return false;
     }
     // Once published, the relay/trampoline remain valid even if a later maintenance API fails.
     if (!restored || !flushed) status(MemoryFinalizeFailed);
-    status(HookActive);
+    if (rva == kHookRva) status(HookActive);
+    return true;
+}
+
+bool install_layout() noexcept {
+    constexpr unsigned char prologue[] = {0x48,0x89,0x5C,0x24,0x08,0x48,0x89,0x74};
+    constexpr unsigned char spacing[] = {0x80,0xB9,0xE1,0x06,0,0,0,0x48};
+    constexpr unsigned char position[] = {0,0x4D,0x89,0xB0,0x1C,0x01,0,0};
+    auto* base = reinterpret_cast<unsigned char*>(GetModuleHandleW(nullptr));
+    if (std::memcmp(base + 0x46B1E0, prologue, 8) ||
+        std::memcmp(base + 0x469D80, prologue, 8) ||
+        std::memcmp(base + 0x46ACE0, spacing, 8) ||
+        std::memcmp(base + 0x458538, position, 8)) {
+        status(HookConflict);
+        return false;
+    }
+    if (!install_site(0x46B1E0, 5, 0, prologue, &SoraPrepareBridge, &gSoraPrepareTrampoline) ||
+        !install_site(0x46ACE0, 7, 0, spacing, &SoraSpacingBridge, &gSoraSpacingTrampoline) ||
+        !install_site(0x458539, 7, 1, position, &SoraPositionBridge, &gSoraPositionTrampoline) ||
+        !install_site(0x469D80, 5, 0, prologue, &SoraDestroyBridge, &gSoraDestroyTrampoline)) return false;
+    // Partial installation remains pass-through; callbacks activate only together.
+    dialogue::EnableLayout();
     return true;
 }
 
@@ -229,7 +262,9 @@ BOOL CALLBACK initialize(PINIT_ONCE, PVOID, PVOID*) noexcept {
         return TRUE;
     }
     status(CorePinned);
-    if (!install_hook()) status(HookFailed);
+    if (!dialogue::StartConfig(pinned)) status(ConfigurationUnavailable);
+    if (install_layout()) status(LayoutActive); else status(LayoutFailed);
+    if (!install_site(kHookRva, 6, 1, kOriginal8, &SoraHookBridge, &gSoraTrampoline)) status(HookFailed);
     status(InitializationFinished);
     return TRUE; // Cache both success and refusal; never race a retry against a hook.
 }

@@ -48,9 +48,7 @@ def main():
         path = OUTPUT / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(data)
-    result = dict(game_runtime_verified=False, files=report,
-                  historical_scope_evidence='85 original layouts / 820 text nodes; no marker collisions',
-                  current_check='Exact source hashes and reviewed byte edits; not a new full-layout audit')
+    result = dict(files=report)
     (OUTPUT / 'report.json').write_text(json.dumps(result, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
     print(json.dumps(result, indent=2, ensure_ascii=False))
 

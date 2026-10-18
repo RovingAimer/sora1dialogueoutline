@@ -1,12 +1,22 @@
-# 当前显示范围
+# 当前显示范围与实现
 
-| 界面 | 布局与背景资源 | 安装包 |
+## 主对白
+
+主包修改 `subtitle.lay` 和 `window8.dds`，为正文与姓名保留填充 RGB 和 alpha，替换原偏移阴影副层为描边几何，并让对应背景透明。v0.2.0 还提供正文、姓名字号和对白区域高度设置，见 [CONFIGURATION.md](CONFIGURATION.md)。
+
+专属布局标记用于识别目标节点，核心在原生字形副层构建时调整描边。该路径以对白节点和原生 CPU 字形项为作用范围。
+
+## 带头像的即时对白横条
+
+| 界面 | 资源 | 安装包 |
 | --- | --- | --- |
-| 主对白正文与姓名 | `subtitle.lay`、`window8.dds` | 主包 |
-| 带头像的即时对白横条 | `active_voice.lay`、`active_voice.dds` | 可选 active-voice 包 |
+| 主对白正文与姓名 | `subtitle.lay`、`window8.dds` | v0.2.0 主包 |
+| 带头像的即时对白横条 | `active_voice.lay`、`active_voice.dds` | v0.2.0 可选包 |
 
-`active_voice.lay` 的横条背景引用 `active_voice` 贴图，头像使用独立贴图，翻页图标使用 `window3`。可选包修改横条背景与文字节点，保留头像和翻页图标。人物头顶跟随角色移动的气泡暂未提供资源补丁。
+可选包让横条背景透明并为横条文字应用同一描边核心；独立头像贴图与 `window3` 翻页图标保持原样。主对白的 `TextSize`、`NameSize` 和 `BoxHeight` 不影响该横条。人物头顶随角色移动的气泡不属于本资源补丁范围。
 
-带标记的文字保留原位置、RGB 和 alpha，偏移阴影副层转换为原生描边几何。描边在每个字形项创建时按填充 RGB 与节点 RGB 的乘积选择对比度较高的纯黑或纯白；默认线宽系数为 `0.60`。完整公式和粗细、颜色调整见 [BUILDING.md](BUILDING.md)。
+## 描边颜色与宽度
 
-支持的 EXE 版本与安装文件清单见 [INSTALL.md](INSTALL.md)。
+每个标记字形的有效填充色按 item RGB 与 node RGB 相乘并夹到 `0..1`，再按 sRGB 相对亮度比较纯黑和纯白的对比度。核心选取较高对比度的颜色；填充 RGB 与 alpha 保持不变。选色在字形项创建时完成，两种原生描边 mode 的宽度均乘以 `0.60`。
+
+完整色彩公式、资源标记、hook ABI 和颜色修改示例见 [BUILDING.md](BUILDING.md)。支持程序与安装清单见 [INSTALL.md](INSTALL.md)。

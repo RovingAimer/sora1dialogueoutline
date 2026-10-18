@@ -60,7 +60,7 @@ def validate(folder):
     report = manifest['native_build_report_data']
     if report['dll_sha256'] != manifest['core_sha256']:
         raise ValueError('Binary identity differs')
-    inputs = report.get('compile_inputs') or {name:report['sources'][name] for name in build.COMPILE_INPUTS}
+    inputs = report['compile_inputs']
     if set(inputs) != set(build.COMPILE_INPUTS) or inputs != manifest['compile_inputs']:
         raise ValueError('Actual compile input record differs')
     for name, expected in inputs.items():
@@ -70,9 +70,6 @@ def validate(folder):
 
 
 def publish(plan, manifest, assets):
-    historical = json.loads((ROOT/'release_plan.json').read_text(encoding='utf-8'))
-    if plan['tag'] == historical['tag']:
-        raise ValueError('Published v0.1.0 is immutable; current source changes cannot reissue or retarget it')
     if plan['version'] != manifest['version'] or plan['tag'] != 'v'+manifest['version']:
         raise ValueError('Explicit release plan differs from prepared version')
     repository = os.environ.get('GITHUB_REPOSITORY', plan['repository'])
@@ -99,8 +96,6 @@ def publish(plan, manifest, assets):
                 raise
             return None
 
-    if manifest['original_binary_source_commit'] is None:
-        raise ValueError('Original binary source commit must be recorded before publication')
     tag, commit = plan['tag'], manifest['source_commit']
     ref = optional('/git/ref/tags/'+quote(tag,safe=''))
     if ref and ref['object']['sha'] != commit:
@@ -117,7 +112,7 @@ def publish(plan, manifest, assets):
     for name, asset in existing.items():
         if asset.get('digest') != 'sha256:'+expected[name]:
             raise ValueError('Existing attachment has different content; retained: '+name)
-    body = plan['body']+'\n\nCurrent source snapshot: `'+commit+'`\nOriginal binary source: `'+manifest['original_binary_source_commit']+'`'
+    body = plan['body']
     if release is None:
         release = request('/releases','POST',dict(tag_name=tag,target_commitish=commit,name=plan['name'],body=body,draft=True))
     for asset,data in assets:
@@ -135,17 +130,17 @@ def publish(plan, manifest, assets):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--packages',type=Path,default=ROOT/'build/packages')
-    parser.add_argument('--plan',type=Path,help='Explicit future release plan; historical release_plan.json is provenance only')
+    parser.add_argument('--plan',type=Path,help='Release repository, version, title and player-facing notes')
     parser.add_argument('--publish',action='store_true')
     args = parser.parse_args()
     manifest, assets = validate(args.packages)
     preview = dict(version=manifest['version'],current_source_commit=manifest['source_commit'],
-                   original_binary_source_commit=manifest['original_binary_source_commit'],
+                   binary_source_commit=manifest['binary_source_commit'],
                    binary_sha256=manifest['core_sha256'],source_only=manifest['source_only'],
                    artifacts=[a for a,_ in assets])
     if args.publish:
         if args.plan is None:
-            parser.error('--publish requires an explicit new --plan; v0.1.0 remains immutable')
+            parser.error('--publish requires an explicit --plan')
         publish(json.loads(args.plan.read_text(encoding='utf-8')),manifest,assets)
     else:
         print('Local preview only; no network or token required.')

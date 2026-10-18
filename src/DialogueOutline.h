@@ -8,7 +8,8 @@ enum SoraDialogueStatus : DWORD {
     HostNameMatch = 0x001, HostHashMatch = 0x002, OriginalBytesMatch = 0x004,
     HookActive = 0x008, HostHashRejected = 0x010, HookConflict = 0x020,
     CorePinned = 0x040, HookFailed = 0x080, InitializationFinished = 0x100,
-    CorePinFailed = 0x200, ForeignHost = 0x400, MemoryFinalizeFailed = 0x800
+    CorePinFailed = 0x200, ForeignHost = 0x400, MemoryFinalizeFailed = 0x800,
+    LayoutActive = 0x1000, LayoutFailed = 0x2000, ConfigurationUnavailable = 0x4000
 };
 
 extern "C" {
