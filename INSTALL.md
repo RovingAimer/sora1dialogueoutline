@@ -2,7 +2,7 @@
 
 ## 正式版本与支持程序
 
-当前 DialogueOutline 正式版本为 v0.2.0，配合通用加载器 v0.2.0 使用。核心支持文件名为 `sora_1st.exe` 且 SHA256 完全匹配的程序：
+当前 DialogueOutline 正式版本为 v0.2.1，配合通用加载器 v0.2.0 使用。核心支持文件名为 `sora_1st.exe` 且 SHA256 完全匹配的程序：
 
     9585d3d993874d65156aba633c00b8a25faab3afde8953a8a183c80fb8f657ac
 
@@ -54,7 +54,13 @@ v0.2.1 核心 DLL SHA256：
 
 ## 从 v0.1.1 / v0.2.0 升级
 
-退出游戏并备份当前文件后，将 v0.2.1 主包合并到游戏目录。覆盖 `DialogueOutline.dll`；若已有 `DialogueOutline.ini`，选择跳过并保留原文件，也可在解压后恢复备份。v0.1.1 安装没有 `DialogueOutline.ini` 时，复制主包中的新 INI，初始值为 `TextSize=75%`、`NameSize=75%`、`BoxHeight=80%`。保留个人配置即可继续使用自己的字号和高度。在原有 `[MainDialogue]` 节中新增 `OutlineWidth=100%` 可调整描边；省略时保持 v0.2.0 默认粗细，范围为 0–200%，0% 关闭描边。保存后在新字形生成时生效。通用加载器仍为 v0.2.0。
+退出游戏并备份当前 DLL 与 INI。已经完整安装 v0.2.0 时，从主包中只取 `mods/DialogueOutline/DialogueOutline.dll` 覆盖同路径文件即可；保留个人 `DialogueOutline.ini`，加载器、模块声明、LAY 和 DDS 无需重新安装，原有可选横条包可继续使用。替换 DLL 后重新启动游戏；INI 的热更新不表示 DLL 可以在运行中替换。
+
+从 v0.1.1 升级时，安装主包；若已有 `DialogueOutline.ini`，跳过并保留原文件。没有 INI 时复制主包中的样例，初始值为 `TextSize=75%`、`NameSize=75%`、`BoxHeight=80%`、`OutlineWidth=100%`。
+
+在原有 `[MainDialogue]` 节中新增 `OutlineWidth=100%` 可调整描边；省略时保持 v0.2.0 默认粗细，范围为 0–200%，0% 关闭描边。保存后在新字形生成时生效。通用加载器仍为 v0.2.0。
+
+v0.2.1 同时修复特殊 CG 样式切换后主对白描边和正文字号失效的问题。若该 CG 使用同一主对白正文节点，也会采用配置中的描边粗细；原文字颜色和透明度保留。
 
 ## 卸载与恢复
 
