@@ -31,25 +31,28 @@ struct Roles {
     unsigned char* belt = nullptr;
 };
 bool MainBody(unsigned char* node, Roles& roles) noexcept {
-    if (Read<std::uint32_t>(node, 0x368) != 0x3E900000 ||
-        Read<std::uint32_t>(node, 0x6C) != 0xF0000006 || !Named(node, "text", 4)) return false;
+    // Script-controlled outline thickness is not a persistent node identity.
+    if (Read<std::uint32_t>(node, 0x6C) != 0xF0000006 || !Named(node, "text", 4)) return false;
     roles.parent = Read<unsigned char*>(node, 0x70);
-    if (!roles.parent) return false;
+    if (!roles.parent || Read<std::uint32_t>(roles.parent, 0x6C) != 0xF0000000) return false;
     const auto count = Read<std::size_t>(roles.parent, 0x260);
     auto** children = Read<unsigned char**>(roles.parent, 0x258);
+    if (!children) return false;
+    bool containsBody = false;
     // These are the direct, named siblings in subtitle.lay's Root.
     for (std::size_t i = 0; i < count; ++i) {
         auto* child = children[i];
+        if (child == node) containsBody = true;
         if (Named(child, "name_text", 9) && Read<std::uint32_t>(child, 0x6C) == 0xF0000007)
             roles.name = child;
         else if (Named(child, "prev_name_text", 14) && Read<std::uint32_t>(child, 0x6C) == 0xF0000009)
             roles.previous = child;
-        else if (Named(child, "belt", 4) &&
+        else if (Named(child, "belt", 4) && Read<std::uint32_t>(child, 0x6C) == 0xF0000001 &&
                  *reinterpret_cast<const std::uintptr_t*>(child) ==
                      reinterpret_cast<std::uintptr_t>(GetModuleHandleW(nullptr)) + 0x9CF4B8)
             roles.belt = child;
     }
-    return roles.name && roles.previous && roles.belt;
+    return containsBody && roles.name && roles.previous && roles.belt;
 }
 template<class T> struct Field {
     T base{};
@@ -117,6 +120,16 @@ extern "C" void SoraLayoutPrepare(unsigned char* node, const void* nativeCaller)
     if (!gEnabled.load(std::memory_order_acquire)) return;
     Roles roles;
     if (!MainBody(node, roles)) return;
+    const auto flags = Read<std::uint32_t>(node, 0x340);
+    const bool restoredOutline = Read<std::uint32_t>(node, 0x368) != 0x3E900000 || !(flags & 0x80);
+    if (restoredOutline) {
+        // The native controller applies CG/dialogue styling before this Prepare.
+        // Restore only this verified main-body node, then let native construction
+        // rebuild the secondary item with the configured width and contrast.
+        Write<std::uint32_t>(node, 0x368, 0x3E900000);
+        Write<std::uint32_t>(node, 0x340, flags | 0x80);
+        Write<std::uint16_t>(node, 0x6E0, 0x0101);
+    }
     bool remeasure = false;
     bool measureName = false;
     bool measurePrevious = false;
@@ -143,7 +156,7 @@ extern "C" void SoraLayoutPrepare(unsigned char* node, const void* nativeCaller)
         state.font.applied = (std::max)(1, Scale(state.font.base, state.settings.textPercent));
         state.spacing.applied = Scale(state.spacing.base, state.settings.textPercent);
         state.height.applied = state.height.base * (state.settings.heightPercent / 100.0f);
-        remeasure = oldFont != state.font.applied || oldSpacing != state.spacing.applied ||
+        remeasure = restoredOutline || oldFont != state.font.applied || oldSpacing != state.spacing.applied ||
                     oldHeight != state.height.applied;
         Write(node, 0x35C, state.font.applied);
         Write(node, 0x34C, state.spacing.applied);
