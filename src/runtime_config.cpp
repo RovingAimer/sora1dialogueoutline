@@ -19,7 +19,8 @@ constexpr unsigned kMaxRetries = 3;
 constexpr std::size_t kMaxIniBytes = 65536;
 constexpr std::uint64_t Pack(Settings value) noexcept {
     return value.textPercent | (std::uint64_t{value.namePercent} << 16) |
-        (std::uint64_t{value.heightPercent} << 32);
+        (std::uint64_t{value.heightPercent} << 32) |
+        (std::uint64_t{value.outlinePercent} << 48);
 }
 static_assert(std::atomic<std::uint64_t>::is_always_lock_free,
               "The render path requires a lock-free x64 settings snapshot.");
@@ -46,7 +47,7 @@ bool Equal(std::wstring_view left, std::wstring_view right) noexcept {
                              right.data(), static_cast<int>(right.size()), TRUE) == CSTR_EQUAL;
 }
 
-bool Percent(std::wstring_view value, std::uint32_t& result) noexcept {
+bool Percent(std::wstring_view value, std::uint32_t& result, std::uint32_t minimum = 1) noexcept {
     value = Trim(value);
     if (!value.empty() && value.back() == L'%') {
         value.remove_suffix(1);
@@ -59,7 +60,7 @@ bool Percent(std::wstring_view value, std::uint32_t& result) noexcept {
         number = number * 10 + static_cast<std::uint32_t>(digit - L'0');
         if (number > 200) return false;
     }
-    if (!number) return false;
+    if (number < minimum) return false;
     result = number;
     return true;
 }
@@ -97,6 +98,7 @@ DWORD Parse(std::wstring_view text, Settings& result) noexcept {
     bool haveText = false;
     bool haveHeight = false;
     bool haveName = false;
+    bool haveOutline = false;
     while (!text.empty()) {
         const auto end = text.find(L'\n');
         auto line = text.substr(0, end);
@@ -122,6 +124,9 @@ DWORD Parse(std::wstring_view text, Settings& result) noexcept {
         } else if (Equal(key, L"NameSize")) {
             if (haveName || !Percent(value, result.namePercent)) return ERROR_INVALID_DATA;
             haveName = true;
+        } else if (Equal(key, L"OutlineWidth")) {
+            if (haveOutline || !Percent(value, result.outlinePercent, 0)) return ERROR_INVALID_DATA;
+            haveOutline = true;
         }
     }
     return haveText && haveHeight ? ERROR_SUCCESS : ERROR_INVALID_DATA;
@@ -356,8 +361,10 @@ bool StartConfig(HMODULE module) noexcept {
 
 Settings CurrentSettings() noexcept {
     const auto value = gSettings.load(std::memory_order_acquire);
-    return {static_cast<std::uint32_t>(value & 0xFFFF), static_cast<std::uint32_t>(value >> 32),
-            static_cast<std::uint32_t>((value >> 16) & 0xFFFF)};
+    return {static_cast<std::uint32_t>(value & 0xFFFF),
+            static_cast<std::uint32_t>((value >> 32) & 0xFFFF),
+            static_cast<std::uint32_t>((value >> 16) & 0xFFFF),
+            static_cast<std::uint32_t>(value >> 48)};
 }
 
 DWORD ConfigurationStatus() noexcept {

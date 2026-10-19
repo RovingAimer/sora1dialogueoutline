@@ -10,13 +10,13 @@
 
 | 界面 | 资源 | 安装包 |
 | --- | --- | --- |
-| 主对白正文与姓名 | `subtitle.lay`、`window8.dds` | v0.2.0 主包 |
-| 带头像的即时对白横条 | `active_voice.lay`、`active_voice.dds` | v0.2.0 可选包 |
+| 主对白正文与姓名 | `subtitle.lay`、`window8.dds` | v0.2.1 主包 |
+| 带头像的即时对白横条 | `active_voice.lay`、`active_voice.dds` | v0.2.1 可选包 |
 
 可选包让横条背景透明并为横条文字应用同一描边核心；独立头像贴图与 `window3` 翻页图标保持原样。主对白的 `TextSize`、`NameSize` 和 `BoxHeight` 不影响该横条。人物头顶随角色移动的气泡不属于本资源补丁范围。
 
 ## 描边颜色与宽度
 
-每个标记字形的有效填充色按 item RGB 与 node RGB 相乘并夹到 `0..1`，再按 sRGB 相对亮度比较纯黑和纯白的对比度。核心选取较高对比度的颜色；填充 RGB 与 alpha 保持不变。选色在字形项创建时完成，两种原生描边 mode 的宽度均乘以 `0.60`。
+每个标记字形的有效填充色按 item RGB 与 node RGB 相乘并夹到 `0..1`，再按 sRGB 相对亮度比较纯黑和纯白的对比度。核心选取较高对比度的颜色；填充 RGB 与 alpha 保持不变。选色在字形项创建时完成，两种原生描边 mode 的宽度均乘以 `0.60 × OutlineWidth / 100`；缺省 100% 保持既有粗细。0% 仅隐藏副层，填充保持不变。保存后在新字形生成时生效。
 
 完整色彩公式、资源标记、hook ABI 和颜色修改示例见 [BUILDING.md](BUILDING.md)。支持程序与安装清单见 [INSTALL.md](INSTALL.md)。

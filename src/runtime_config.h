@@ -9,6 +9,7 @@ struct Settings {
     std::uint32_t textPercent = 100;
     std::uint32_t heightPercent = 100;
     std::uint32_t namePercent = 100;
+    std::uint32_t outlinePercent = 100;
 };
 
 // Call once after pinning this module. Failure leaves the baseline usable.

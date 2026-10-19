@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / 'build/packages'
 sys.path.insert(0, str(ROOT))
 import build
-VERSION = '0.2.0'
+VERSION = '0.2.1'
 TARGET_HASH = '9585d3d993874d65156aba633c00b8a25faab3afde8953a8a183c80fb8f657ac'
 
 

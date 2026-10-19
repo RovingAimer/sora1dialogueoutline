@@ -2,7 +2,7 @@
 
 ## 版本与构建环境
 
-DialogueOutline v0.2.0 使用通用加载器 v0.2.0。核心源码和构建脚本采用 MIT；布局资源与 DDS 使用各自的来源和许可，见 [LICENSE](LICENSE) 与 [THIRD_PARTY.md](THIRD_PARTY.md)。
+DialogueOutline v0.2.1 使用通用加载器 v0.2.0。核心源码和构建脚本采用 MIT；布局资源与 DDS 使用各自的来源和许可，见 [LICENSE](LICENSE) 与 [THIRD_PARTY.md](THIRD_PARTY.md)。
 
 构建需要 Windows x64、Python 3.10+、Visual Studio 2022 C++ Build Tools（MSVC x64 与 MASM）及 Windows SDK。在源码根目录运行：
 
@@ -12,7 +12,7 @@ DialogueOutline v0.2.0 使用通用加载器 v0.2.0。核心源码和构建脚�
 
 当前 v0.2.0 核心 DLL SHA256：
 
-    30f3f7ab9ee6cca278c8b72d45bf283942b84026b4d5b8c39748d24887dc2d80
+    460b551adbd97452ece8c79bd8e52daa11500c69d77e9a389e8161e262138081
 
 ## 构建资源补丁
 
@@ -38,7 +38,7 @@ DialogueOutline v0.2.0 使用通用加载器 v0.2.0。核心源码和构建脚�
 LAY 在目标对白节点的 `0x368` 写入专属标记 `0.28125f`（位模式 `0x3E900000`）。核心仅处理该标记下的 fill 与 outline 项：
 
 - 原 outline mode `0x0001` 时，将 fill 的 `0x08..0x47` 字节复制到 outline，切换到 `0x0100`，并用节点标记除以原生字形尺度生成线宽。
-- 原生 mode `0x0100` 保留几何；两种 mode 的线宽都在字形项构建时乘以 `0.60`。
+- 原生 mode `0x0100` 保留几何；两种 mode 的线宽都在字形项构建时乘以 `0.60 × OutlineWidth / 100`。`OutlineWidth` 缺省为 100；为 0 时仅把描边副层的 alpha（item `+0xA4`）设为 0，正文填充不变。
 - fill RGB 和 alpha 保持原值。`0x3E900000` 用作节点身份标记，线宽由独立 multiplier 控制。
 
 有效填充色逐通道计算为 `itemRGB * nodeRGB` 并夹到 `0..1`，再转为线性 sRGB：`v <= 0.04045` 时除以 `12.92`，否则计算 `((v + 0.055) / 1.055)^2.4`。相对亮度为 `Y = 0.2126R + 0.7152G + 0.0722B`。黑色对比度为 `(Y + 0.05) / 0.05`，白色为 `1.05 / (Y + 0.05)`；选对比度较大者，相同时选黑。颜色在字形项创建时选择，字形项重建时重新选择。
@@ -57,7 +57,7 @@ LAY 在目标对白节点的 `0x368` 写入专属标记 `0.28125f`（位模式 `
 
 ## 正文布局、姓名与热更新
 
-`src/dialogue_layout.cpp` 通过专属 marker、原生 id `0xF0000006`、节点名 `text` 及同父节点结构识别主对白正文。RVA `0x46B1E0` 的原生 Prepare 前读取一份配置快照并应用三个设置。
+`src/dialogue_layout.cpp` 通过专属 marker、原生 id `0xF0000006`、节点名 `text` 及同父节点结构识别主对白正文。RVA `0x46B1E0` 的原生 Prepare 前读取一份配置快照并应用三个布局设置。描边 hook 在每个新字形副层构建时读取同一个 64 位快照中的 `OutlineWidth`。
 
 准备桥同时传入原始调用地址。主对白控制器在 `0x457F9F` 调用准备函数前重设原生字号，因此该路径每次直接采集新基值；字形重建等其他路径沿用已保存的未缩放基值。这样可随游戏字号档位变化重算，同时避免重复缩放。
 
@@ -65,6 +65,6 @@ LAY 在目标对白节点的 `0x368` 写入专属标记 `0.28125f`（位模式 `
 
 `BoxHeight` 按比例缩放对白区域高度并保持矩形底边；正文、姓名和前一姓名随高度差移动，`belt` 区域同步缩放和位移，`okuri` 图标保留原底边位置。RVA `0x458539` 在控制器坐标更新后协调位移，动画起点、当前位置和目标位置同步平移，动画计时与曲线保留。RVA `0x46ACE0` 处理控制器后续赋予的行距；RVA `0x469D80` 在正文销毁时清理基准缓存。脚本换行和分页规则由游戏继续处理。可选的带头像即时对白横条不受这三项设置影响。
 
-`src/runtime_config.cpp` 将 `DialogueOutline.ini` 定位在核心 DLL 同目录，通过 `ReadDirectoryChangesW` 与 `CreateThreadpoolIo` 接收文件通知。文件变化后等待 250 ms 合并连续写入；读取失败后每 100 ms 重试，最多 3 次。合法配置以 64 位原子快照发布，下一次正常主对白 Prepare 读取新值。
+`src/runtime_config.cpp` 将 `DialogueOutline.ini` 定位在核心 DLL 同目录，通过 `ReadDirectoryChangesW` 与 `CreateThreadpoolIo` 接收文件通知。文件变化后等待 250 ms 合并连续写入；读取失败后每 100 ms 重试，最多 3 次。合法配置以 64 位原子快照发布，三个布局参数在下一次正常主对白 Prepare 读取新值；描边粗细在新字形项构建时读取，不主动重建当前已缓存文字。
 
 更多配置格式与生效时机见 [CONFIGURATION.md](CONFIGURATION.md)。加载器接口见 [integration/README.md](integration/README.md)。

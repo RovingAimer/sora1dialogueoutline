@@ -149,8 +149,15 @@ void SoraOutlineCallbackWithScale(const unsigned char* node, const unsigned char
     }
     float width = 0;
     std::memcpy(&width, outline + 0xB0, sizeof(width));
-    width *= kOutlineWidthMultiplier; // Apply once per native item construction, including existing outlines.
+    const auto percent = dialogue::CurrentSettings().outlinePercent;
+    width *= kOutlineWidthMultiplier * (static_cast<float>(percent) / 100.0f);
     std::memcpy(outline + 0xB0, &width, sizeof(width));
+    if (!percent) {
+        // Hide only the freshly constructed secondary item's RGBA alpha.
+        // A zero-width distance-field outline can otherwise still cover the fill.
+        const float alpha = 0;
+        std::memcpy(outline + 0xA4, &alpha, sizeof(alpha));
+    }
     SoraOutlineCallback(node, fill, outline);
 }
 }
