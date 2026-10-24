@@ -8,6 +8,7 @@ extern "C" {
 extern const char SoraDialogueLicenseNotice[] = R"MITNOTICE(
 MIT License
 
+Copyright (c) 2025 Hinkiii
 Copyright (c) 2026 DialogueOutline contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

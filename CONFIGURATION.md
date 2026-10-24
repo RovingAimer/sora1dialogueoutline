@@ -43,6 +43,6 @@ DialogueOutline v0.2.1 主包包含 `mods/DialogueOutline/DialogueOutline.ini`�
 
 ## 初始化状态
 
-`SoraGetStatus` 返回核心初始化位掩码。核心、描边与布局 hook 全部启用时为 `0x114F`。`0x2000` 表示布局 hook 未能完整安装；`0x4000` 表示配置目录通知无法启动。运行期间的 INI 读取或解析失败沿用上一次成功配置。
+`SoraGetStatus` 返回核心初始化位掩码。核心、描边与布局 hook 全部启用时为 `0x114D`。`0x2000` 表示布局 hook 未能完整安装；`0x4000` 表示配置目录通知无法启动。运行期间的 INI 读取或解析失败沿用上一次成功配置。
 
 构建与 hook 位置见 [BUILDING.md](BUILDING.md)。

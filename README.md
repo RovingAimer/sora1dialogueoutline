@@ -1,6 +1,8 @@
 # DialogueOutline
 
-DialogueOutline 为《空之轨迹 the 1st》的主对白添加自动黑白描边，保留正文与姓名原色，移除原偏移阴影，并让对应背景透明。当前正式版本为 v0.2.1；通用加载器继续使用 v0.2.0。
+DialogueOutline 为《空之轨迹 the 1st》的主对白添加自动黑白描边，保留正文与姓名原色，移除原偏移阴影，并让对应背景透明。当前正式版本为 v0.2.2；通用加载器继续使用 v0.2.0。
+
+v0.2.2 移除额外 EXE 白名单并改为特征定位，本次按用户授权静态验证后发布。
 
 ## 实现思路
 
@@ -10,19 +12,19 @@ DialogueOutline 为《空之轨迹 the 1st》的主对白添加自动黑白描�
 
 v0.2.1 新增 `OutlineWidth=0–200%`：100% 保持原粗细，50% 减半，0% 关闭描边；保存后在新生成的文字上生效。同时修复特殊 CG 后主对白描边和字号设置被剧情样式覆盖的问题。
 
-## v0.2.1 下载
+## v0.2.2 下载
 
 | 下载 | 用途 |
 | --- | --- |
-| [DialogueOutline-v0.2.1-main.zip](https://github.com/RovingAimer/sora1dialogueoutline/releases/download/v0.2.1/DialogueOutline-v0.2.1-main.zip) | 新安装主包：核心 DLL、加载器模块声明、布局配置、主对白 LAY 与 DDS。 |
-| [DialogueOutline-v0.2.1-active-voice.zip](https://github.com/RovingAimer/sora1dialogueoutline/releases/download/v0.2.1/DialogueOutline-v0.2.1-active-voice.zip) | 可选资源包：带头像即时对白横条布局与背景 DDS。 |
-| [DialogueOutline-v0.2.1-source.zip](https://github.com/RovingAimer/sora1dialogueoutline/releases/download/v0.2.1/DialogueOutline-v0.2.1-source.zip) | 完整源码、构建脚本、文档和许可证。 |
+| [DialogueOutline-v0.2.2-main.zip](https://github.com/RovingAimer/sora1dialogueoutline/releases/download/v0.2.2/DialogueOutline-v0.2.2-main.zip) | 新安装主包：核心 DLL、加载器模块声明、布局配置、主对白 LAY 与 DDS。 |
+| [DialogueOutline-v0.2.2-active-voice.zip](https://github.com/RovingAimer/sora1dialogueoutline/releases/download/v0.2.2/DialogueOutline-v0.2.2-active-voice.zip) | 可选资源包：带头像即时对白横条布局与背景 DDS。 |
+| [DialogueOutline-v0.2.2-source.zip](https://github.com/RovingAimer/sora1dialogueoutline/releases/download/v0.2.2/DialogueOutline-v0.2.2-source.zip) | 完整源码、构建脚本、文档和许可证。 |
 
 游戏目录还需要[通用加载器 v0.2.0](https://github.com/RovingAimer/sora1looseload/releases/tag/v0.2.0)。安装和升级步骤见 [INSTALL.md](INSTALL.md)。
 
 ## 支持范围
 
-核心只支持 SHA256 为 `9585d3d993874d65156aba633c00b8a25faab3afde8953a8a183c80fb8f657ac` 的 `sora_1st.exe`。可选资源包覆盖带头像的即时对白横条；人物头顶随角色移动的气泡不属于当前资源补丁范围。
+不再按 EXE 文件名、文件大小或整文件 SHA256 设置白名单。采用与 Hinkiii 原版加载器相同的掩码特征扫描方式定位实际代码；找不到对应特征时跳过相应接入。其他版本是否可用取决于目标代码及对象布局，不要求整份 EXE 与某一版本完全相同。可选资源包覆盖带头像的即时对白横条；人物头顶随角色移动的气泡不属于当前资源补丁范围。
 
 核心代码和构建脚本采用 MIT，见 [LICENSE](LICENSE)。游戏布局与 DDS 的来源和许可独立于代码，见 [THIRD_PARTY.md](THIRD_PARTY.md)。
 

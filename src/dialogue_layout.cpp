@@ -12,6 +12,9 @@
 #include <unordered_map>
 
 namespace {
+const void* gNativeCaller = nullptr;
+std::uintptr_t gBeltType = 0;
+void (*gMeasure)(unsigned char*) = nullptr;
 template<class T> T Read(const unsigned char* node, std::size_t at) noexcept {
     T value;
     std::memcpy(&value, node + at, sizeof(value));
@@ -49,7 +52,7 @@ bool MainBody(unsigned char* node, Roles& roles) noexcept {
             roles.previous = child;
         else if (Named(child, "belt", 4) && Read<std::uint32_t>(child, 0x6C) == 0xF0000001 &&
                  *reinterpret_cast<const std::uintptr_t*>(child) ==
-                     reinterpret_cast<std::uintptr_t>(GetModuleHandleW(nullptr)) + 0x9CF4B8)
+                     gBeltType)
             roles.belt = child;
     }
     return containsBody && roles.name && roles.previous && roles.belt;
@@ -113,6 +116,11 @@ void Move(Position& position, unsigned char* node, float delta) noexcept {
 }
 
 namespace dialogue {
+void SetNativeTargets(const void* caller, const void* beltType, void (*measure)(unsigned char*)) noexcept {
+    gNativeCaller = caller;
+    gBeltType = reinterpret_cast<std::uintptr_t>(beltType);
+    gMeasure = measure;
+}
 void EnableLayout() noexcept { gEnabled.store(true, std::memory_order_release); }
 }
 
@@ -143,8 +151,7 @@ extern "C" void SoraLayoutPrepare(unsigned char* node, const void* nativeCaller)
         const auto oldFont = Read<std::int32_t>(node, 0x35C);
         const auto oldSpacing = Read<std::int32_t>(node, 0x34C);
         const auto oldHeight = Read<float>(node, 0x334);
-        const auto base = reinterpret_cast<std::uintptr_t>(GetModuleHandleW(nullptr));
-        if (nativeCaller == reinterpret_cast<const void*>(base + 0x457FA4)) {
+        if (nativeCaller == gNativeCaller) {
             // The controller just assigned its original 31/33/35 size. A new
             // original can equal our last result, so value comparison is insufficient.
             state.font.base = oldFont;
@@ -172,8 +179,7 @@ extern "C" void SoraLayoutPrepare(unsigned char* node, const void* nativeCaller)
         // Text setters already measure before Prepare. Recalculate those metrics
         // with the new sizes, then let the original Prepare build its persistent
         // layout/typewriter state normally. Do not reset it from a render callback.
-        const auto base = reinterpret_cast<std::uintptr_t>(GetModuleHandleW(nullptr));
-        const auto measure = reinterpret_cast<void (*)(unsigned char*)>(base + 0x46E760);
+        const auto measure = gMeasure;
         if (remeasure) measure(node);
         if (measureName) measure(roles.name);
         if (measurePrevious) measure(roles.previous);

@@ -20,3 +20,5 @@ Microsoft Detours 是独立加载器的依赖，固定在提交 `9764cebcb1a7594
 以上校验值记录发布使用的文件。DDS版权归参考作者，游戏布局版权归原作权利人；相关资源遵循各自许可。MIT适用于本项目代码。
 
 黑白描边选择参考 [W3C sRGB 相对亮度与对比度定义](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html#dfn-relative-luminance)。
+
+特征扫描比较逻辑改编自 Hinkiii/sora1looseload 的 dllmain.cpp / FindPattern（MIT，Copyright (c) 2025 Hinkiii）。完整 MIT 许可见 LICENSE；源码头保留版权。

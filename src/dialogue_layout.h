@@ -5,6 +5,7 @@
 
 namespace dialogue {
 void EnableLayout() noexcept;
+void SetNativeTargets(const void* caller, const void* beltType, void (*measure)(unsigned char*)) noexcept;
 }
 extern "C" {
 void SoraLayoutPrepare(unsigned char* node, const void* nativeCaller) noexcept;

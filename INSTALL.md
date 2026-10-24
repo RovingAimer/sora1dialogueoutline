@@ -2,31 +2,23 @@
 
 ## 正式版本与支持程序
 
-当前 DialogueOutline 正式版本为 v0.2.1，配合通用加载器 v0.2.0 使用。核心支持文件名为 `sora_1st.exe` 且 SHA256 完全匹配的程序：
+当前 DialogueOutline 版本为 v0.2.2，配合通用加载器 v0.2.0。不再按 EXE 文件名、文件大小或整文件 SHA256 设置白名单。采用与 Hinkiii 原版加载器相同的掩码特征扫描方式定位实际代码；找不到对应特征时跳过相应接入。其他版本是否可用取决于目标代码及对象布局，不要求整份 EXE 与某一版本完全相同。
 
-    9585d3d993874d65156aba633c00b8a25faab3afde8953a8a183c80fb8f657ac
-
-在游戏程序目录核对：
-
-    Get-FileHash -Algorithm SHA256 sora_1st.exe
-
-v0.2.1 核心 DLL SHA256：
-
-    42c7b04b8491f4dd4617423375fe562b0f38ba43179761bf61a5df5f12a19626
+本次兼容性调整仅做静态验证；原字幕配置和 CG 修复功能保持。
 
 ## 下载文件
 
 | 下载 | 文件与用途 |
 | --- | --- |
-| [DialogueOutline-v0.2.1-main.zip](https://github.com/RovingAimer/sora1dialogueoutline/releases/download/v0.2.1/DialogueOutline-v0.2.1-main.zip) | 主包，含 `mods/DialogueOutline/DialogueOutline.dll`、`mods/DialogueOutline/sora_mod.ini`、`mods/DialogueOutline/DialogueOutline.ini`、`layout/subtitle.lay`、`asset/dx11/image/window8.dds`。 |
-| [DialogueOutline-v0.2.1-active-voice.zip](https://github.com/RovingAimer/sora1dialogueoutline/releases/download/v0.2.1/DialogueOutline-v0.2.1-active-voice.zip) | 可选包，含 `layout/active_voice.lay` 与 `asset/dx11/image/active_voice.dds`，提供带头像的即时对白横条。 |
-| [DialogueOutline-v0.2.1-source.zip](https://github.com/RovingAimer/sora1dialogueoutline/releases/download/v0.2.1/DialogueOutline-v0.2.1-source.zip) | 完整源码、构建步骤、文档与许可证。 |
+| [DialogueOutline-v0.2.2-main.zip](https://github.com/RovingAimer/sora1dialogueoutline/releases/download/v0.2.2/DialogueOutline-v0.2.2-main.zip) | 主包，含 `mods/DialogueOutline/DialogueOutline.dll`、`mods/DialogueOutline/sora_mod.ini`、`mods/DialogueOutline/DialogueOutline.ini`、`layout/subtitle.lay`、`asset/dx11/image/window8.dds`。 |
+| [DialogueOutline-v0.2.2-active-voice.zip](https://github.com/RovingAimer/sora1dialogueoutline/releases/download/v0.2.2/DialogueOutline-v0.2.2-active-voice.zip) | 可选包，含 `layout/active_voice.lay` 与 `asset/dx11/image/active_voice.dds`，提供带头像的即时对白横条。 |
+| [DialogueOutline-v0.2.2-source.zip](https://github.com/RovingAimer/sora1dialogueoutline/releases/download/v0.2.2/DialogueOutline-v0.2.2-source.zip) | 完整源码、构建步骤、文档与许可证。 |
 
 另需通用加载器 [v0.2.0](https://github.com/RovingAimer/sora1looseload/releases/tag/v0.2.0)，安装文件为游戏目录下的 `xinput1_4.dll`。
 
 ## 全新安装
 
-1. 退出游戏，核对 `sora_1st.exe` 的 SHA256，并备份将被覆盖的文件。
+1. 退出游戏，备份将被覆盖的模块与资源文件；已有个人 INI 时保留自己的配置。
 2. 安装通用加载器 v0.2.0。
 3. 将主包解压并合并到 `sora_1st.exe` 所在目录，保留 `mods`、`layout` 和 `asset` 的目录结构。
 4. 需要带头像的即时对白横条时，再合并可选包。

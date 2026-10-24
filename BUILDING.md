@@ -2,17 +2,15 @@
 
 ## 版本与构建环境
 
-DialogueOutline v0.2.1 使用通用加载器 v0.2.0。核心源码和构建脚本采用 MIT；布局资源与 DDS 使用各自的来源和许可，见 [LICENSE](LICENSE) 与 [THIRD_PARTY.md](THIRD_PARTY.md)。
+DialogueOutline v0.2.2 使用通用加载器 v0.2.0。核心源码和构建脚本采用 MIT；布局资源与 DDS 使用各自的来源和许可，见 [LICENSE](LICENSE) 与 [THIRD_PARTY.md](THIRD_PARTY.md)。
 
 构建需要 Windows x64、Python 3.10+、Visual Studio 2022 C++ Build Tools（MSVC x64 与 MASM）及 Windows SDK。在源码根目录运行：
 
     python build.py
 
-脚本编译 `src/core.cpp`、`src/bridge.asm`、`src/runtime_config.cpp` 与 `src/dialogue_layout.cpp`，输出 `build/DialogueOutline.dll`、`build/core_report.json`、编译日志和桥接反汇编。报告记录 DLL 与编译输入 SHA256、源码提交、编译器、导出符号及直接 DLL 导入。构建使用 C++17、静态 CRT `/MT`、`/O2` 与 `/W4`，直接依赖 `KERNEL32.dll` 和 `bcrypt.dll`。
+脚本编译 `src/core.cpp`、`src/bridge.asm`、`src/runtime_config.cpp` 与 `src/dialogue_layout.cpp`，输出 `build/DialogueOutline.dll`、`build/core_report.json`、编译日志和桥接反汇编。报告记录 DLL 与编译输入 SHA256、源码提交、编译器、导出符号及直接 DLL 导入。构建使用 C++17、静态 CRT `/MT`、`/O2` 与 `/W4`，直接依赖 `KERNEL32.dll`。
 
-当前 v0.2.0 核心 DLL SHA256：
-
-    42c7b04b8491f4dd4617423375fe562b0f38ba43179761bf61a5df5f12a19626
+当前 DLL 摘要见本地构建报告和发布清单。
 
 ## 构建资源补丁
 
@@ -33,7 +31,7 @@ DialogueOutline v0.2.1 使用通用加载器 v0.2.0。核心源码和构建脚�
 
 ## 目标程序与描边 hook
 
-核心验证 `sora_1st.exe` 的 SHA256 `9585d3d993874d65156aba633c00b8a25faab3afde8953a8a183c80fb8f657ac` 和 hook 位置的原始指令字节。主字形 hook 位于 RVA `0x46BDF9`。ABI 输入为 fill RDI、node RSI、outline RBX；原生字形尺度由 XMM8 经桥接作为第四参数 XMM3。
+不再按 EXE 文件名、文件大小或整文件 SHA256 设置白名单。采用与 Hinkiii 原版加载器相同的掩码特征扫描方式定位实际代码；找不到对应特征时跳过相应接入。其他版本是否可用取决于目标代码及对象布局，不要求整份 EXE 与某一版本完全相同。 五个 hook、原生测量函数、控制器调用点及 belt 虚表引用均从特征扫描获得。下文 RVA 仅为旧参考构建中的位置，不用于运行时定位。ABI 输入为 fill RDI、node RSI、outline RBX；原生字形尺度由 XMM8 经桥接作为第四参数 XMM3。
 
 LAY 在目标对白节点的 `0x368` 写入专属标记 `0.28125f`（位模式 `0x3E900000`）。核心仅处理该标记下的 fill 与 outline 项：
 

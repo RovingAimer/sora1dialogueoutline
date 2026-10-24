@@ -6,56 +6,19 @@
 #include "LicenseNotice.h"
 #include "dialogue_layout.h"
 #include "runtime_config.h"
-#include <bcrypt.h>
+#include "target_patterns.h"
 #include <cmath>
 #include <cstdint>
 #include <cstring>
-#include <cwchar>
 #include <limits>
 
 namespace {
-constexpr std::uintptr_t kHookRva = 0x46BDF9;
 constexpr std::uint32_t kMarker = 0x3E900000; // Explicit resource marker: 0.28125f.
 constexpr float kOutlineWidthMultiplier = 0.60f;
-constexpr unsigned char kOriginal8[] = {0x00, 0xFF, 0x86, 0x88, 0x03, 0x00, 0x00, 0x48};
-constexpr unsigned char kExeHash[] = {
-    0x95,0x85,0xd3,0xd9,0x93,0x87,0x4d,0x65,0x15,0x6a,0xba,0x63,0x3c,0x00,0xb8,0xa2,
-    0x5f,0xaa,0xb3,0xaf,0xde,0x89,0x53,0xa8,0xa1,0x83,0xc8,0x0f,0xb8,0xf6,0x57,0xac
-};
 volatile LONG gStatus = 0;
 INIT_ONCE gInitializeOnce = INIT_ONCE_STATIC_INIT;
 
 void status(DWORD value) noexcept { InterlockedOr(&gStatus, static_cast<LONG>(value)); }
-
-bool host_path(wchar_t (&path)[32768]) noexcept {
-    const DWORD count = GetModuleFileNameW(nullptr, path, 32768);
-    if (!count || count >= 32768) return false;
-    const wchar_t* name = std::wcsrchr(path, L'\\');
-    return _wcsicmp(name ? name + 1 : path, L"sora_1st.exe") == 0;
-}
-
-bool verified_file_hash(const wchar_t* path) noexcept {
-    HANDLE file = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                              nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (file == INVALID_HANDLE_VALUE) return false;
-    BCRYPT_ALG_HANDLE algorithm = nullptr;
-    BCRYPT_HASH_HANDLE hash = nullptr;
-    unsigned char digest[32] = {};
-    unsigned char buffer[65536];
-    bool okay = BCryptOpenAlgorithmProvider(&algorithm, BCRYPT_SHA256_ALGORITHM, nullptr, 0) >= 0;
-    if (okay) okay = BCryptCreateHash(algorithm, &hash, nullptr, 0, nullptr, 0, 0) >= 0;
-    while (okay) {
-        DWORD bytes = 0;
-        if (!ReadFile(file, buffer, sizeof(buffer), &bytes, nullptr)) { okay = false; break; }
-        if (!bytes) break;
-        okay = BCryptHashData(hash, buffer, bytes, 0) >= 0;
-    }
-    if (okay) okay = BCryptFinishHash(hash, digest, sizeof(digest), 0) >= 0;
-    if (hash) BCryptDestroyHash(hash);
-    if (algorithm) BCryptCloseAlgorithmProvider(algorithm, 0);
-    CloseHandle(file);
-    return okay && std::memcmp(digest, kExeHash, sizeof(digest)) == 0;
-}
 
 bool relative_jump(unsigned char* instruction, const void* destination) noexcept {
     const auto delta = reinterpret_cast<std::intptr_t>(destination) -
@@ -163,18 +126,22 @@ void SoraOutlineCallbackWithScale(const unsigned char* node, const unsigned char
 }
 
 namespace {
-bool install_site(std::uintptr_t rva, unsigned span, unsigned prefix,
-                  const unsigned char (&original)[8], const void* bridgeAddress,
-                  PVOID volatile* destination) noexcept {
-    auto* target = reinterpret_cast<unsigned char*>(GetModuleHandleW(nullptr)) + rva;
+bool install_site(unsigned char* target, unsigned span, const unsigned char* instructions, const void* bridgeAddress,
+                  PVOID volatile* destination, bool draw = false) noexcept {
+    if (!target) return false;
+    const auto prefix = reinterpret_cast<std::uintptr_t>(target) % 8;
     auto* aligned = target - prefix;
-    if (reinterpret_cast<std::uintptr_t>(aligned) % 8 != 0 ||
-        std::memcmp(aligned, original, sizeof(original)) != 0) {
+    if (prefix + span > 8) {
         // A second core/ASI or another patch owns this site. Do not claim its hook.
         status(HookConflict);
         return false;
     }
-    if (rva == kHookRva) status(OriginalBytesMatch);
+    unsigned char original[8];
+    std::memcpy(original, aligned, sizeof(original));
+    if (std::memcmp(original+prefix, instructions, span) != 0) {
+        status(HookConflict); return false;
+    }
+    if (draw) status(OriginalBytesMatch);
     auto* page = allocate_near(reinterpret_cast<std::uintptr_t>(target));
     if (!page) return false;
     // Relay is an absolute indirect JMP; its pointer is inline, so it clobbers no registers.
@@ -224,44 +191,40 @@ bool install_site(std::uintptr_t rva, unsigned span, unsigned prefix,
     }
     // Once published, the relay/trampoline remain valid even if a later maintenance API fails.
     if (!restored || !flushed) status(MemoryFinalizeFailed);
-    if (rva == kHookRva) status(HookActive);
+    if (draw) status(HookActive);
     return true;
 }
 
 bool install_layout() noexcept {
-    constexpr unsigned char prologue[] = {0x48,0x89,0x5C,0x24,0x08,0x48,0x89,0x74};
-    constexpr unsigned char spacing[] = {0x80,0xB9,0xE1,0x06,0,0,0,0x48};
-    constexpr unsigned char position[] = {0,0x4D,0x89,0xB0,0x1C,0x01,0,0};
-    auto* base = reinterpret_cast<unsigned char*>(GetModuleHandleW(nullptr));
-    if (std::memcmp(base + 0x46B1E0, prologue, 8) ||
-        std::memcmp(base + 0x469D80, prologue, 8) ||
-        std::memcmp(base + 0x46ACE0, spacing, 8) ||
-        std::memcmp(base + 0x458538, position, 8)) {
-        status(HookConflict);
+    auto* prepare = targets::Prepare();
+    auto* spacing = targets::Spacing();
+    auto* position = targets::Position();
+    auto* destroy = targets::Destroy();
+    auto* caller = targets::MainCaller();
+    auto* measure = targets::Measure();
+    auto* type = targets::BeltType();
+    if (!prepare || !spacing || !position || !destroy || !caller || !measure || !type) {
+        status(PatternMissing);
         return false;
     }
-    if (!install_site(0x46B1E0, 5, 0, prologue, &SoraPrepareBridge, &gSoraPrepareTrampoline) ||
-        !install_site(0x46ACE0, 7, 0, spacing, &SoraSpacingBridge, &gSoraSpacingTrampoline) ||
-        !install_site(0x458539, 7, 1, position, &SoraPositionBridge, &gSoraPositionTrampoline) ||
-        !install_site(0x469D80, 5, 0, prologue, &SoraDestroyBridge, &gSoraDestroyTrampoline)) return false;
+    std::int32_t displacement = 0;
+    std::memcpy(&displacement, type+3, sizeof(displacement));
+    dialogue::SetNativeTargets(caller+5, type+7+displacement,
+        reinterpret_cast<void (*)(unsigned char*)>(measure));
+    if (!install_site(prepare, 5, targets::kPrepare, &SoraPrepareBridge, &gSoraPrepareTrampoline) ||
+        !install_site(spacing, 7, targets::kSpacing, &SoraSpacingBridge, &gSoraSpacingTrampoline) ||
+        !install_site(position, 7, targets::kPosition, &SoraPositionBridge, &gSoraPositionTrampoline) ||
+        !install_site(destroy, 5, targets::kDestroy, &SoraDestroyBridge, &gSoraDestroyTrampoline)) return false;
     // Partial installation remains pass-through; callbacks activate only together.
     dialogue::EnableLayout();
     return true;
 }
 
 BOOL CALLBACK initialize(PINIT_ONCE, PVOID, PVOID*) noexcept {
-    wchar_t path[32768] = {};
-    if (!host_path(path)) {
-        status(ForeignHost | InitializationFinished);
-        return TRUE;
-    }
-    status(HostNameMatch);
-    if (!verified_file_hash(path)) {
-        status(HostHashRejected | HookFailed | InitializationFinished);
-        return TRUE;
-    }
-    status(HostHashMatch);
-    // Pin only after host verification, before any callback destination is published.
+    auto* draw = targets::Draw();
+    if (!draw) { status(PatternMissing | HookFailed | InitializationFinished); return TRUE; }
+    status(TargetPatternFound);
+    // Pin before any callback destination is published.
     HMODULE pinned = nullptr;
     if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN,
                            reinterpret_cast<LPCWSTR>(&initialize), &pinned)) {
@@ -271,7 +234,7 @@ BOOL CALLBACK initialize(PINIT_ONCE, PVOID, PVOID*) noexcept {
     status(CorePinned);
     if (!dialogue::StartConfig(pinned)) status(ConfigurationUnavailable);
     if (install_layout()) status(LayoutActive); else status(LayoutFailed);
-    if (!install_site(kHookRva, 6, 1, kOriginal8, &SoraHookBridge, &gSoraTrampoline)) status(HookFailed);
+    if (!install_site(draw, 6, targets::kDraw, &SoraHookBridge, &gSoraTrampoline, true)) status(HookFailed);
     status(InitializationFinished);
     return TRUE; // Cache both success and refusal; never race a retry against a hook.
 }

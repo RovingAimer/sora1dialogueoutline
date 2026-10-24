@@ -14,9 +14,8 @@ import sys
 ROOT = Path(__file__).resolve().parent
 SOURCE = ROOT / 'src'
 OUTPUT = ROOT / 'build'
-COMPILE_INPUTS = ('src/core.cpp', 'src/bridge.asm', 'src/DialogueOutline.def', 'src/DialogueOutline.h', 'src/LicenseNotice.h',
+COMPILE_INPUTS = ('src/core.cpp', 'src/bridge.asm', 'src/DialogueOutline.def', 'src/DialogueOutline.h', 'src/LicenseNotice.h', 'src/pattern_scan.h', 'src/target_patterns.h',
                   'src/runtime_config.cpp', 'src/runtime_config.h', 'src/dialogue_layout.cpp', 'src/dialogue_layout.h')
-TARGET_HASH = '9585d3d993874d65156aba633c00b8a25faab3afde8953a8a183c80fb8f657ac'
 
 
 def digest(data):
@@ -153,7 +152,7 @@ def main():
          '/IMPLIB:' + str(OUTPUT / 'DialogueOutline.lib'),
          '/PDB:' + str(OUTPUT / 'DialogueOutline.pdb'), '/MAP:' + str(OUTPUT / 'DialogueOutline.map'),
          str(OUTPUT / 'core.obj'), str(OUTPUT / 'bridge.obj'),
-         str(OUTPUT / 'runtime_config.obj'), str(OUTPUT / 'dialogue_layout.obj'), 'kernel32.lib', 'bcrypt.lib'],
+         str(OUTPUT / 'runtime_config.obj'), str(OUTPUT / 'dialogue_layout.obj'), 'kernel32.lib'],
         environment, 'core_link.log')
     run([dumper, '/NOLOGO', '/DISASM', str(OUTPUT / 'bridge.obj')], environment, 'core_bridge_disasm.txt')
     dll = dll_path.read_bytes()
@@ -162,7 +161,7 @@ def main():
     if {row['name'] for row in exports} != expected or any(row['forwarded'] for row in exports):
         raise ValueError('Export contract mismatch')
     # Static CRT: the complete direct DLL dependency set is limited to Windows APIs.
-    if {row['module'].lower() for row in imports} - {'kernel32.dll', 'bcrypt.dll'}:
+    if {row['module'].lower() for row in imports} - {'kernel32.dll'}:
         raise ValueError('Unexpected imported DLL')
     source_hashes = {name: digest((ROOT / name).read_bytes()) for name in COMPILE_INPUTS}
     if (ROOT / '.git').exists():
@@ -177,23 +176,23 @@ def main():
         build_flags=['/MT', '/O2', '/W4', '/std:c++17', '/EHsc', '/utf-8', '/Brepro'],
         exports=exports, imports=imports, export_contract_match=True,
         runtime_verified=False, offline_dll_executed=False, game_files_required_for_build=False,
-        target_exe_name='sora_1st.exe', target_exe_sha256=TARGET_HASH,
-        hook_rva='0x46BDF9', atomic_patch_expected8='00ff868803000048',
-        layout_hooks=[dict(rva='0x46B1E0', span=5, expected8='48895c2408488974'),
+        target_lookup='Hinkiii-style masked signature scan; no EXE name/size/hash whitelist',
+        reference_hook_rva='0x46BDF9', atomic_patch_expected8='00ff868803000048',
+        reference_layout_hooks=[dict(rva='0x46B1E0', span=5, expected8='48895c2408488974'),
                       dict(rva='0x46ACE0', span=7, expected8='80b9e10600000048'),
                       dict(rva='0x458539', span=7, prefix=1, expected8='004d89b01c010000'),
                       dict(rva='0x469D80', span=5, expected8='48895c2408488974')],
         configuration='DLL directory/DialogueOutline.ini; ReadDirectoryChangesW; apply at native text preparation',
         marker_float=0.28125, marker_float_bits='0x3E900000', outline_item_mode='0x0100',
-        initialization='Explicit synchronous InitOnce outside DllMain; only matching host is pinned; no dependency loader or logging.',
-        status_bits={'0x001': 'HostNameMatch', '0x002': 'HostHashMatch', '0x004': 'OriginalBytesMatch',
-            '0x008': 'HookActive', '0x010': 'HostHashRejected', '0x020': 'HookConflict',
+        initialization='Explicit synchronous InitOnce outside DllMain; only after native target signature resolution is the module pinned; no dependency loader or logging.',
+        status_bits={'0x001': 'TargetPatternFound', '0x004': 'OriginalBytesMatch',
+            '0x008': 'HookActive', '0x020': 'HookConflict',
             '0x040': 'CorePinned', '0x080': 'HookFailed', '0x100': 'InitializationFinished',
-            '0x200': 'CorePinFailed', '0x400': 'ForeignHost', '0x800': 'MemoryFinalizeFailed',
+            '0x200': 'CorePinFailed', '0x800': 'MemoryFinalizeFailed',
             '0x1000': 'LayoutActive', '0x2000': 'LayoutFailed', '0x4000': 'ConfigurationUnavailable'},
         limitations=[
             'No game, original loader, or produced DLL was executed by this build.',
-            'Only the exact target hash and original instruction bytes are supported.',
+            'Native signatures and compatible object/instruction layouts are required; no executable identity whitelist.',
             'Effective fill RGB times node RGB is treated as sRGB; fill and alpha are unchanged.',
             'Selection occurs at item construction; later tint/brightness changes without rebuild may not reselect.',
             'The bridge preserves GPR volatile state, flags, MXCSR and XMM0-XMM5; no synthetic SEH unwind metadata or AVX upper-register preservation.',

@@ -11,8 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / 'build/packages'
 sys.path.insert(0, str(ROOT))
 import build
-VERSION = '0.2.1'
-TARGET_HASH = '9585d3d993874d65156aba633c00b8a25faab3afde8953a8a183c80fb8f657ac'
+VERSION = '0.2.2'
 
 
 def digest(data):
@@ -86,7 +85,7 @@ def main():
                     source_commit=source_commit, source_tree_sha256=source_id,
                     binary_source_commit=core_report.get('source_commit') or source_commit,
                     compile_inputs=compile_inputs,
-                    code_license='MIT', target_exe_sha256=TARGET_HASH,
+                    code_license='MIT', target_lookup='masked native signatures; no EXE identity whitelist',
                     loader_repository='https://github.com/RovingAimer/sora1looseload',
                     packaging_runs_game=False, sky_2nd_supported=False,
                     replaces_shared_shaders=False, preserves_original_text_color=True,
